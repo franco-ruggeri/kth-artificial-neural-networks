@@ -18,13 +18,9 @@ x2, y2 = np.random.multivariate_normal(mB, covB, 100).T
 
 
 classA = np.concatenate((x1.reshape(1, 100), y1.reshape(1, 100)), axis=0)
-print(classA)
-print(classA[0,],"<--")
-print(classA.shape)
 targetsA = np.ones(100)
 
 classB = np.concatenate((x2.reshape(1, 100), y2.reshape(1, 100)), axis=0)
-print(classB.shape)
 targetsB = -1*np.ones(100)
 
 patterns = np.concatenate((classA,classB),axis=1)
@@ -35,10 +31,14 @@ data = np.concatenate((patterns,targets.reshape(1,200)))
 np.random.shuffle(data.T)
 
 patterns = data[0:2,]
+
 targets = data[2,]
+np.random.shuffle(targets)
 
 pct = PCT(patterns)
-pct.delta_rule(patterns, targets)
+#pct.delta_rule(patterns, targets)
+#print(pct.get_weights())
+pct.perceptron_learning(patterns, targets)
 print(pct.get_weights())
 
 def decision_boundary(x, w):
