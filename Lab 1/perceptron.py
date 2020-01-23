@@ -5,13 +5,14 @@ import numpy as np
 class PCT:
     """Single layered perceptron using the delta rule"""
 
-    def __init__(self, data, eta = 0.001, epochs = 20):
+    def __init__(self, data, eta = 0.001, epochs = 20, iterations=500):
         """Initializes the variables"""
 
         self.data = data
         self.eta = eta
         self.epochs = epochs
         self.w = self.init_weights(data)
+        self.iterations = iterations
 
 
     def init_weights(self, inputs):
@@ -27,9 +28,8 @@ class PCT:
 
     def shape_inputs(self,inputs):
         """This method adds the bias row to the pattern matrix"""
-        bias_vector = np.ones(np.shape(inputs)[1])
+        bias_vector = -np.ones(np.shape(inputs)[1])
         return np.vstack([inputs, bias_vector])
-
 
     def activation(self, inputs):
         """
@@ -39,9 +39,33 @@ class PCT:
 
         patterns = self.shape_inputs(inputs)
         activations = np.dot(self.w, patterns)
-        activations = np.where(activations > 0, 1, -1)
+        activations = np.where(activations > 0, 1, 0)
 
         return activations
+
+    def perceptron_learning(self, patterns, targets):
+        """
+        :param inputs:
+        :param targets:
+        :return:
+        """
+        X = self.shape_inputs(patterns)
+        N = X.shape[1]
+
+        for t in range(self.iterations):
+            for i in range(N):
+
+                if targets[i] == 1 and np.dot(self.w,X[:,i]) <= 0:
+                    self.w += self.eta*X[:,i]
+
+                else:
+                    continue
+
+                if targets[i] == -1 and np.dot(self.w,X[:,i]) >= 0:
+                    self.w -= self.eta*X[:,i]
+
+                else:
+                    continue
 
 
     def delta_rule(self, inputs, targets):
@@ -61,8 +85,8 @@ class PCT:
             self.activations = self.activation(inputs)
             self.w -= self.eta*np.dot(X, self.activations - targets)
 
-    def show_weights(self):
-
+    def get_weights(self):
+        """Returns the weight matrix"""
         return self.w
 
 
