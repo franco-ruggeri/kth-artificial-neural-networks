@@ -64,6 +64,8 @@ class SingleLayerPerceptron:
             self.mce.append(len(np.where(targets != y)[0]) / patterns.shape[1])
 
     def predict(self, patterns):
+        if patterns.shape[0] != self.weights.shape[1]:  # used from outside, patterns without extra row for bias
+            patterns = np.concatenate((patterns, np.ones((1, patterns.shape[1]))), axis=0)
         return self._activate(self.weights @ patterns)
 
     def _activate(self, x):
@@ -91,7 +93,7 @@ class SingleLayerPerceptron:
 class TwoLayerPerceptron:
     """Two-layer perceptron (neural network with two layers of McCulloch Pitts neurons)."""
 
-    def __init__(self, learning_rate, epochs, hidden_nodes, alpha):
+    def __init__(self, learning_rate, epochs, hidden_nodes, alpha=0.9):
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.hidden_nodes = hidden_nodes    # number of neurons in the hidden layer
