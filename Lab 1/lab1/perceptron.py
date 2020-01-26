@@ -1,16 +1,16 @@
 import numpy as np
-from utility import plot_decision_boundary
 
 
 class SingleLayerPerceptron:
     """Single-layer perceptron (neural network with one layer of McCulloch Pitts neurons)."""
 
-    def __init__(self, learning_rate, epochs, method='perceptron', mode='batch', bias=True):
+    def __init__(self, learning_rate, epochs, method='perceptron', mode='batch', bias=True, animation=False):
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.bias = bias
         self.weights = None
         self.mce = None
+        self.animation = animation      # plot decision boundary at each epoch
 
         # select method
         if method == 'delta':
@@ -40,8 +40,9 @@ class SingleLayerPerceptron:
 
         for i in range(self.epochs):
             # animation of decision boundary
-            # xlim = [min(patterns[0]) - 0.1, max(patterns[0]) + 0.1, min(patterns[1]) - 0.1, max(patterns[1]) + 0.1]
-            # plot_decision_boundary(self, xlim, 'y')
+            if self.animation:
+                xlim = [min(patterns[0]) - 0.1, max(patterns[0]) + 0.1, min(patterns[1]) - 0.1, max(patterns[1]) + 0.1]
+                self.plot_decision_boundary(xlim, 'y')
 
             # update weights
             if self.batch:
@@ -71,6 +72,18 @@ class SingleLayerPerceptron:
         else:
             targets = (1, 0)
         return np.where(x > 0, targets[0], targets[1])
+
+    def plot_decision_boundary(self, plot, xlim, label, N=100):
+        x1 = np.linspace(xlim[0], xlim[1], N)
+        x2 = np.linspace(xlim[2], xlim[3], N)
+        w = self.weights[0, :]
+        if not self.bias:
+            w = np.concatenate((w, np.zeros(1)))
+        x2 = (-w[2] - w[0] * x1) / w[1]
+        plot.plot(x1, x2, label=label, linewidth=2)
+
+    def plot_learning_curve(self, plot, label):
+        plot.plot(self.mce, 'o-', label=label)
 
     _sigma = 0.01   # standard deviation for weight initialization
 
