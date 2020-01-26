@@ -94,12 +94,24 @@ print(train_X.shape[1])
 
 model.compile(loss='mean_squared_error', optimizer='adam')
 
+# Early stop, to avoid overfitting
+patience = 3
+delta = 0.0000000000000006
+callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
+                                            min_delta=delta,
+                                            patience=patience)
+
 train_model = model.fit(train_X, train_Y,
+                        callbacks=[callback],
                         validation_data=(validation_X, validation_Y),
                         batch_size=train_X.shape[1],
-                        epochs = epochs)
+                        epochs=epochs)
 
-loss, accuracy = model.evaluate(x=test_X,
+accuracy = model.evaluate(x=test_X,
                           y=test_Y,
                           batch_size=test_X.shape[1])
-print(loss, accuracy)
+
+print('Test Accuracy:', accuracy)
+
+test_predictions = model.predict(test_X)
+
