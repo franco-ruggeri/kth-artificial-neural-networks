@@ -77,11 +77,17 @@ epochs = 20
 
 
 
+
 layers = [8,5]
 model = tf.keras.Sequential()
 
-for idx, nodes in enumerate(layers):
 
+
+
+
+for idx, nodes in enumerate(layers):
+    # TODO Add regularizers to the weight layers, maybe initializers as well? Default seems to be a
+    #      truncated normal distribution centered on 0 mean with std = sqrt(2 / (inputs + outputs))
     if idx == 0:
         model.add(tf.keras.layers.Dense(nodes,
                                         input_dim=train_X.shape[1]))
