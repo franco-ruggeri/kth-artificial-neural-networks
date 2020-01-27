@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from perceptron import SingleLayerPerceptron, TwoLayerPerceptron
+from perceptron import SLP, MLP
 
 
 def generate_data(mu, sigma, N, seed, linearly_sep):
@@ -92,7 +92,7 @@ def train_perceptron(patterns, targets, learning_rate, epochs, method, mode, see
         exit(-1)
 
     # train
-    perceptron = SingleLayerPerceptron(learning_rate, epochs, method, mode, bias)
+    perceptron = SLP(learning_rate, epochs, method, mode, bias)
     perceptron.learn(patterns, targets)
     return perceptron
 
@@ -192,7 +192,7 @@ def no_bias(patterns, targets, axes_db, axes_lc, xlim, seed, learning_rate, epoc
     axes_lc.set_xticks(np.arange(0, epochs + 1, 2))
 
 
-def linearly_non_separable(patterns, targets, axes_db, xlim, seed, learning_rate, epochs, n_runs):
+def linearly_non_separable_sl(patterns, targets, axes_db, xlim, seed, learning_rate, epochs, n_runs):
     # decision boundary
     training_patterns, training_targets = sub_sample_data(patterns, targets, seed)[0:2]
     for i in range(len(training_patterns)):
@@ -239,12 +239,12 @@ def linearly_non_separable(patterns, targets, axes_db, xlim, seed, learning_rate
         print()
 
 
-def linearly_non_separable(patterns, targets, axes_db, axes_lc, xlim, seed, learning_rate, epochs, hidden_nodes):
+def linearly_non_separable_ml(patterns, targets, axes_db, axes_lc, xlim, seed, learning_rate, epochs, hidden_nodes):
     np.random.seed(seed)
 
     # train
     targets = np.where(targets == 1, 1, -1)     # targets {-1,1} for delta rule
-    perceptron = TwoLayerPerceptron(learning_rate, epochs, hidden_nodes)
+    perceptron = MLP(learning_rate, epochs, hidden_nodes)
     perceptron.learn(patterns, targets)
 
     # learning curve
@@ -279,10 +279,11 @@ plot_data(axes_db, patterns, targets)
 
 # analysis
 # perceptron_vs_delta(patterns, targets, axes_db, axes_lc, xlim, seed, learning_rates=[0.01, 0.001, 0.0001], epochs=30)
-# batch_vs_sequential(patterns, targets, axes_db, axes_lc, xlim, seed, learning_rates=[0.00001], epochs=20, n_orders=2)
+# batch_vs_sequential(patterns, targets, axes_db, axes_lc, xlim, seed, learning_rates=[0.1], epochs=20, n_orders=1)
 # no_bias(patterns, targets, axes_db, axes_lc, xlim, seed, learning_rate=0.001, epochs=20)
-# linearly_non_separable(patterns, targets, axes_db, xlim, seed, learning_rate=0.001, epochs=100, n_runs=10)
-linearly_non_separable(patterns, targets, axes_db, axes_lc, xlim, seed, learning_rate=0.1, epochs=2000, hidden_nodes=10)
+# linearly_non_separable_sl(patterns, targets, axes_db, xlim, seed, learning_rate=0.001, epochs=100, n_runs=10)
+linearly_non_separable_ml(patterns, targets, axes_db, axes_lc, xlim, seed, learning_rate=0.1, epochs=200,
+                          hidden_nodes=3)
 
 # show figures
 axes_db.legend(loc='lower right')

@@ -1,8 +1,8 @@
 import numpy as np
 
 
-class SingleLayerPerceptron:
-    """Single-layer perceptron (neural network with one layer of McCulloch Pitts neurons)."""
+class SLP:
+    """Single-Layer Perceptron (neural network with one layer of McCulloch Pitts neurons)."""
 
     def __init__(self, learning_rate, epochs, method, mode, bias=True, animation=False):
         self.learning_rate = learning_rate
@@ -78,7 +78,7 @@ class SingleLayerPerceptron:
     _sigma = 0.01   # standard deviation for weight initialization
 
 
-class TwoLayerPerceptron:
+class MLP:
     """Two-layer perceptron (neural network with two layers of McCulloch Pitts neurons)."""
 
     def __init__(self, learning_rate, epochs, hidden_nodes, alpha=0.9):
@@ -92,10 +92,10 @@ class TwoLayerPerceptron:
 
     def learn(self, patterns, targets):
         """Train the perceptron using BackProp with momentum."""
-        # init
-        patterns = np.concatenate((patterns, np.ones((1, patterns.shape[1]))), axis=0)  # add row for bias term
-        self.W = self._sigma * np.random.randn(self.hidden_nodes, patterns.shape[0])
-        self.V = self._sigma * np.random.randn(targets.shape[0], self.hidden_nodes+1)   # +1 for bias weight
+        # init (see Marsland's book for initialization of weights)
+        patterns = np.concatenate((patterns, np.ones((1, patterns.shape[1]))), axis=0)
+        self.W = 1. / np.sqrt(patterns.shape[0]) * (np.random.rand(self.hidden_nodes, patterns.shape[0]) - 0.5)
+        self.V = 1. / np.sqrt(self.hidden_nodes+1) * (np.random.rand(targets.shape[0], self.hidden_nodes+1) - 0.5)
         dW = 0
         dV = 0
 
@@ -126,7 +126,7 @@ class TwoLayerPerceptron:
         if patterns.shape[0] != self.W.shape[1]:    # used from outside, patterns without extra row for bias
             patterns = np.concatenate((patterns, np.ones((1, patterns.shape[1]))), axis=0)
         O = self._forward(patterns)[1]
-        O = np.where(abs(O) < 1e-15, 0, O)           # on the decision boundary
+        O = np.where(abs(O) < 1e-6, 0, O)           # on the decision boundary
         O = np.where(O > 0, 1, O)
         O = np.where(O < 0, -1, O)
         return O
@@ -142,5 +142,3 @@ class TwoLayerPerceptron:
 
     def _derivative_activate(self, phi_x):
         return (1 + phi_x) * (1 - phi_x) / 2
-
-    _sigma = 0.01   # standard deviation for weight initialization
