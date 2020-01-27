@@ -152,7 +152,7 @@ def perceptron_vs_delta(patterns, targets, axes_db, axes_lc, xlim, seed, learnin
     axes_lc.set_xticks(np.arange(0, epochs + 1, 2))
 
 
-def batch_vs_sequential(patterns, targets, axes_db, axes_lc, xlim, seed, learning_rates, epochs, n_orders):
+def batch_vs_sequential(patterns, targets, axes_db, axes_lc, xlim, seed, learning_rates, epochs, n_orders, method):
     # generate different orders
     data = []
     for i in range(n_orders):
@@ -161,8 +161,8 @@ def batch_vs_sequential(patterns, targets, axes_db, axes_lc, xlim, seed, learnin
     for learning_rate in learning_rates:
         for i in range(len(data)):
             # train
-            p_batch = train_perceptron(data[i][0], data[i][1], learning_rate, epochs, 'delta', 'batch', seed)
-            p_seq = train_perceptron(data[i][0], data[i][1], learning_rate, epochs, 'delta', 'sequential', seed)
+            p_batch = train_perceptron(data[i][0], data[i][1], learning_rate, epochs, method, 'batch', seed)
+            p_seq = train_perceptron(data[i][0], data[i][1], learning_rate, epochs, method, 'sequential', seed)
 
             # plot
             label_end = r'$\eta={}$'.format(learning_rate)
@@ -172,8 +172,8 @@ def batch_vs_sequential(patterns, targets, axes_db, axes_lc, xlim, seed, learnin
             plot_decision_boundary(p_seq, axes_db, xlim, 'sequential mode ' + label_end)
             plot_learning_curve(p_batch, axes_lc, 'o-', 'batch mode ' + label_end)
             plot_learning_curve(p_seq, axes_lc, 'o-', 'sequential mode ' + label_end)
-    axes_db.set_title('Batch vs sequential - Delta')
-    axes_lc.set_title('Batch vs sequential - Delta')
+    axes_db.set_title('Batch vs sequential - {}'.format(method))
+    axes_lc.set_title('Batch vs sequential - {}'.format(method))
     axes_lc.set_xticks(np.arange(0, epochs + 1, 2))
 
 
@@ -260,7 +260,7 @@ def linearly_non_separable_ml(patterns, targets, axes_db, axes_lc, xlim, seed, l
     axes_db.contour(xx1, xx2, y, levels=(0,))
 
 
-seed = 1
+seed = 100
 
 # prepare figures
 fig_db = plt.figure()
@@ -269,21 +269,24 @@ fig_lc = plt.figure()
 axes_lc = plt.axes()
 
 # generate data
-mu = [(1, .3), (0, -.1)]
-sigma = [.2, .3]
+mu = [(2., .3), (0, -.1)]
+sigma = [.4, .4]
 N = 100
-patterns, targets = generate_data(mu, sigma, N, seed, linearly_sep=False)
+patterns, targets = generate_data(mu, sigma, N, seed, linearly_sep=True)
 patterns, targets = shuffle_data(patterns, targets, seed)
 xlim = [min(patterns[0])-0.1, max(patterns[0])+0.1, min(patterns[1])-0.1, max(patterns[1])+0.1]
 plot_data(axes_db, patterns, targets)
 
 # analysis
 # perceptron_vs_delta(patterns, targets, axes_db, axes_lc, xlim, seed, learning_rates=[0.01, 0.001, 0.0001], epochs=30)
-# batch_vs_sequential(patterns, targets, axes_db, axes_lc, xlim, seed, learning_rates=[0.1], epochs=20, n_orders=1)
+batch_vs_sequential(patterns, targets, axes_db, axes_lc, xlim, seed,
+                    learning_rates=[0.1, 0.001], epochs=20, n_orders=1, method='delta')
+# batch_vs_sequential(patterns, targets, axes_db, axes_lc, xlim, seed,
+#                     learning_rates=[0.1], epochs=20, n_orders=2, method='perceptron')
 # no_bias(patterns, targets, axes_db, axes_lc, xlim, seed, learning_rate=0.001, epochs=20)
 # linearly_non_separable_sl(patterns, targets, axes_db, xlim, seed, learning_rate=0.001, epochs=100, n_runs=10)
-linearly_non_separable_ml(patterns, targets, axes_db, axes_lc, xlim, seed, learning_rate=0.1, epochs=200,
-                          hidden_nodes=3)
+# linearly_non_separable_ml(patterns, targets, axes_db, axes_lc, xlim, seed,
+#                           learning_rate=0.1, epochs=200, hidden_nodes=3)
 
 # show figures
 axes_db.legend(loc='lower right')
