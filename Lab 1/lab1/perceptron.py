@@ -4,12 +4,12 @@ import numpy as np
 class SingleLayerPerceptron:
     """Single-layer perceptron (neural network with one layer of McCulloch Pitts neurons)."""
 
-    def __init__(self, learning_rate, epochs, method='perceptron', mode='batch', bias=True, animation=False):
+    def __init__(self, learning_rate, epochs, method, mode, bias=True, animation=False):
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.bias = bias
         self.weights = None
-        self.mce = None
+        self.mce = None                 # misclassification error
         self.animation = animation      # plot decision boundary at each epoch
 
         # select method
@@ -36,7 +36,7 @@ class SingleLayerPerceptron:
 
         # stats
         y = self.predict(patterns)
-        self.mce = [len(np.where(targets != y)[0]) / patterns.shape[1]]                     # misclassification error
+        self.mce = [len(np.where(targets != y)[0]) / patterns.shape[1]]
 
         for i in range(self.epochs):
             # animation of decision boundary
@@ -75,18 +75,6 @@ class SingleLayerPerceptron:
             targets = (1, 0)
         return np.where(x > 0, targets[0], targets[1])
 
-    def plot_decision_boundary(self, plot, xlim, label, N=100):
-        x1 = np.linspace(xlim[0], xlim[1], N)
-        x2 = np.linspace(xlim[2], xlim[3], N)
-        w = self.weights[0, :]
-        if not self.bias:
-            w = np.concatenate((w, np.zeros(1)))
-        x2 = (-w[2] - w[0] * x1) / w[1]
-        plot.plot(x1, x2, label=label, linewidth=2)
-
-    def plot_learning_curve(self, plot, label):
-        plot.plot(self.mce, 'o-', label=label)
-
     _sigma = 0.01   # standard deviation for weight initialization
 
 
@@ -100,35 +88,57 @@ class TwoLayerPerceptron:
         self.alpha = alpha                  # factor for momentum term
         self.W = None                       # weights first layer
         self.V = None                       # weights second layer
+        self.mce = None                     # misclassification error
 
     def learn(self, patterns, targets):
         """Train the perceptron using BackProp with momentum."""
         # init
-        patterns = np.concatenate((patterns, np.ones(patterns.shape[1])), axis=0)           # add row for bias term
+        patterns = np.concatenate((patterns, np.ones((1, patterns.shape[1]))), axis=0)  # add row for bias term
         self.W = self._sigma * np.random.randn(self.hidden_nodes, patterns.shape[0])
-        self.V = self._sigma * np.random.randn(targets.shape[0], self.hidden_nodes+1)       # +1 for bias weight
+        self.V = self._sigma * np.random.randn(targets.shape[0], self.hidden_nodes+1)   # +1 for bias weight
         dW = 0
         dV = 0
 
+        # stats
+        y = self.predict(patterns)
+        self.mce = [len(np.where(targets != y)[0]) / patterns.shape[1]]
+
         for i in range(self.epochs):
             # forward pass
-            H = self._activate(self.W @ patterns)
-            H = np.concatenate((H, np.ones(patterns.shape[0])), axis=0)                     # add row for bias term
-            O = self._activate(self.V @ H)
+            H, O = self._forward(patterns)
 
             # backward pass
             delta_o = (O - targets) * self._derivative_activate(O)
             delta_h = (self.V.T @ delta_o) * self._derivative_activate(H)
-            delta_h = delta_h[:-1]                                                          # remove extra row
+            delta_h = delta_h[:-1]                                                      # remove extra row
 
             # weight update
-            dW = self.alpha * dW - (1 - self.alpha) * (delta_o @ patterns.T)
-            dV = self.alpha * dV - (1-self.alpha) * (delta_h @ H.T)
+            dW = self.alpha * dW - (1 - self.alpha) * (delta_h @ patterns.T)
+            dV = self.alpha * dV - (1-self.alpha) * (delta_o @ H.T)
             self.W += self.learning_rate * dW
             self.V += self.learning_rate * dV
 
+            # stats
+            y = self.predict(patterns)
+            self.mce.append(len(np.where(targets != y)[0]) / patterns.shape[1])
+
+    def predict(self, patterns):
+        if patterns.shape[0] != self.W.shape[1]:    # used from outside, patterns without extra row for bias
+            patterns = np.concatenate((patterns, np.ones((1, patterns.shape[1]))), axis=0)
+        O = self._forward(patterns)[1]
+        O = np.where(abs(O) < 1e-15, 0, O)           # on the decision boundary
+        O = np.where(O > 0, 1, O)
+        O = np.where(O < 0, -1, O)
+        return O
+
+    def _forward(self, patterns):
+        H = self._activate(self.W @ patterns)
+        H = np.concatenate((H, np.ones((1, patterns.shape[1]))), axis=0)                # add row for bias term
+        O = self._activate(self.V @ H)
+        return H, O
+
     def _activate(self, x):
-        return 2. / (1 + np.exp(x)) - 1
+        return 2. / (1 + np.exp(-x)) - 1
 
     def _derivative_activate(self, phi_x):
         return (1 + phi_x) * (1 - phi_x) / 2
