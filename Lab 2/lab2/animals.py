@@ -12,16 +12,18 @@ def load_animals(filename_attributes, filename_names):
     return patterns, names
 
 
-def print_natural_order(som, names):
-    animals = list(range(len(names)))               # indexes of animals
+def get_natural_order(som, patterns):
+    idx = list(range(patterns.shape[0]))            # indexes of animals
     winners = [som.winner(p) for p in patterns]
-    aux = zip(animals, winners)
+    aux = zip(idx, winners)
     aux = sorted(aux, key=lambda x: x[1])           # sort by winner
-    for a, w in aux:
-        print(names[a])                             # print names in order of winner (topography in output space)
+    idx = [i[0] for i in aux]
+    return idx                                      # indexes of animals in natural order
 
 
 patterns, names = load_animals('datasets/animals.dat', 'datasets/animalnames.txt')
 som = SOM(n_nodes=100, learning_rate=0.2, n_epochs=20)
 som.learn(patterns)
-print_natural_order(som, names)
+idx = get_natural_order(som, patterns)
+for i in idx:
+    print(names[i])
