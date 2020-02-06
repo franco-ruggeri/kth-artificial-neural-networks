@@ -28,14 +28,19 @@ class SOM:
 
     def winner(self, pattern):
         """Get the index of the winner node."""
-        distances = list(map(lambda w: self._distance(pattern, w), weights))
+        distances = [self._distance(pattern, w) for w in self.weights]
         winner = distances.index(min(distances))
         return winner
 
     def _neighbourhood(self, node, epoch):
         """Get neighbourhood, represented as indexes, of a node. The node itself is included."""
         neighbourhood_size = int(self._init_nb_size / self.n_epochs * epoch)
-        return np.arange(node-neighbourhood_size, node+neighbourhood_size)
+        idx_min, idx_max = node-neighbourhood_size, node+neighbourhood_size
+        if idx_min < 0:
+            idx_min = 0
+        if idx_max > self.n_nodes:
+            idx_max = self.n_nodes
+        return np.arange(idx_min, idx_max)
 
     def _update_weights(self, pattern, neighbourhood):
         """Move nodes a bit closer to the pattern."""
