@@ -10,21 +10,21 @@ def gaussian_rbf(x, mu, sigma):
 class RBFNN:
     """RBF neural network."""
 
-    def __init__(self, n_rbf, sigma, mu, method, learning_rate=None, n_epochs=None):
+    def __init__(self, n_rbf, sigma, mu, mode, learning_rate=None, n_epochs=None):
         self.n_rbf = n_rbf
         self.sigma = sigma
         self.mu = mu
-        self.method = method
+        self.mode = mode
         self.learning_rate = learning_rate
         self.n_epochs = n_epochs
         self.weights = None
 
     def learn(self, patterns, targets):
-        if self.method == 'batch':
+        if self.mode == 'batch':
             self.weights = np.random.rand(targets.shape[1], self.n_rbf)
             phi = self._get_phi(patterns)
             self.weights = inv(phi.T @ phi) @ phi.T @ targets
-        elif self.method == 'online':
+        elif self.mode == 'online':
             for i in range(self.n_epochs):
                 # TODO: implement
                 pass
