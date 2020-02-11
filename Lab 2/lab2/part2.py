@@ -123,7 +123,7 @@ np.random.seed(1)
 
 # 4.1 - Animals
 attributes, names = load_animals('datasets/animals.dat', 'datasets/animalnames.txt')
-som = SOM(dim=1, n_nodes=100, learning_rate=0.2, n_epochs=20, init_nb_size=50)
+som = SOM(dim=1, n_nodes=100, learning_rate=0.2, n_epochs=20, init_nb_size=20)
 som.learn(attributes)
 names = sort_animals(som, attributes, names)
 print('Sorted animals:', names)
@@ -132,7 +132,7 @@ print('Sorted animals:', names)
 cities = load_cities('datasets/cities.dat')
 som = SOM(dim=1, n_nodes=10, learning_rate=0.5, n_epochs=20, init_nb_size=2, circular=True)
 som.learn(cities)
-# plot_tour(som, cities)
+plot_tour(som, cities)
 tour_length = compute_tour_length(som)
 print('Tour length:', tour_length)
 

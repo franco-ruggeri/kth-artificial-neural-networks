@@ -9,7 +9,7 @@ def manhattan(x, y):
 
 def _neighbourhood_1d(winner, n_nodes, neighbourhood_size, circular):
     """Get neighbourhood, represented as indexes, of a node. The node itself is included. 1D version."""
-    idx_min, idx_max = math.ceil(winner - neighbourhood_size), math.floor(winner + neighbourhood_size)
+    idx_min, idx_max = math.ceil(winner - neighbourhood_size/2.), math.floor(winner + neighbourhood_size/2.)
     if circular:
         if idx_max >= n_nodes:
             neighbourhood = np.arange(idx_min, n_nodes)  # [idx_min, n_nodes-1] plus...
@@ -28,8 +28,9 @@ def _neighbourhood_1d(winner, n_nodes, neighbourhood_size, circular):
 
 def _neighbourhood_2d(winner, side, neighbourhood_size):
     """Get neighbourhood, represented as indexes, of a node. The node itself is included. 2D version."""
-    return np.array([(i, j) for j in range(side) for i in range(side)
-                     if manhattan(winner, (i, j)) <= neighbourhood_size])
+    nodes = [(i, j) for j in range(side) for i in range(side)]
+    nodes = sorted(nodes, key=lambda x: manhattan(winner, x))   # sort by distance
+    return np.array(nodes[:neighbourhood_size+1])               # +1 for the winner itself
 
 
 def _select_distance(distance):
