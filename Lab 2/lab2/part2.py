@@ -13,14 +13,13 @@ def load_animals(filename_attributes, filename_names):
     return attributes, names
 
 
-def sort_animals(som, attributes, names):
-    idx = list(range(attributes.shape[0]))  # indexes of animals
-    winners = [som.winner(a) for a in attributes]
+def sort_by_winner(som, patterns):
+    idx = list(range(patterns.shape[0]))    # indexes of animals
+    winners = [som.winner(a) for a in patterns]
     aux = zip(idx, winners)
-    aux = sorted(aux, key=lambda x: x[1])  # sort by winner
+    aux = sorted(aux, key=lambda x: x[1])   # sort by winner
     idx = [i[0] for i in aux]
-    names = [names[i] for i in idx]
-    return names  # animals in natural order
+    return idx                              # indexes sorted by winner
 
 
 def load_cities(filename):
@@ -33,19 +32,23 @@ def load_cities(filename):
 
 def plot_tour(som, cities):
     # we want a cyclic curve, so we add the first point at the end (the last point gets connected to the first one)
+    cities = np.concatenate((cities, cities[0].reshape(1, -1)), axis=0)
     weights = np.concatenate((som.weights, som.weights[0].reshape(1, -1)), axis=0)
+
+    # plot
     plt.scatter(cities[:, 0], cities[:, 1], c='y', label='city')
-    plt.plot(weights[:, 0], weights[:, 1], 'b-', label='tour')
-    plt.plot(weights[:, 0], weights[:, 1], 'ro', label='tour')
+    plt.plot(cities[:, 0], cities[:, 1], 'y', label='tour')
+    plt.plot(weights[:, 0], weights[:, 1], 'ro-', label='output node')
     plt.legend()
     plt.show()
 
 
-def compute_tour_length(som):
+def compute_tour_length(cities):
     tour_length = 0
-    for i in range(som.n_nodes):
-        x = som.weights[i]
-        y = som.weights[(i + 1) % som.n_nodes]
+    n_cities = len(cities)
+    for i in range(n_cities):
+        x = cities[i]
+        y = cities[(i + 1) % n_cities]
         tour_length += np.linalg.norm(x - y)
     return tour_length
 
@@ -121,24 +124,29 @@ def plot_mp(som, votes, parties, genders, districts):
 
 np.random.seed(1)
 
-# 4.1 - Animals
-attributes, names = load_animals('datasets/animals.dat', 'datasets/animalnames.txt')
-som = SOM(dim=1, n_nodes=100, learning_rate=0.2, n_epochs=20, init_nb_size=20)
-som.learn(attributes)
-names = sort_animals(som, attributes, names)
-print('Sorted animals:', names)
+# # 4.1 - Animals
+# attributes, names = load_animals('datasets/animals.dat', 'datasets/animalnames.txt')
+# som = SOM(dim=1, n_nodes=100, learning_rate=0.2, n_epochs=20, init_nb_size=20)
+# som.learn(attributes)
+# idx = sort_by_winner(som, attributes)
+# names = [names[i] for i in idx]
+# print('Sorted animals:', names)
 
 # 4.2 - Cyclic tour
-cities = load_cities('datasets/cities.dat')
-som = SOM(dim=1, n_nodes=10, learning_rate=0.5, n_epochs=20, init_nb_size=2, circular=True)
-som.learn(cities)
-plot_tour(som, cities)
-tour_length = compute_tour_length(som)
-print('Tour length:', tour_length)
+for init_nb_size in np.arange(2, 9, 1):
+    cities = load_cities('datasets/cities.dat')
+    som = SOM(dim=1, n_nodes=10, learning_rate=0.2, n_epochs=20, init_nb_size=init_nb_size, circular=True)
+    som.learn(cities)
+    idx = sort_by_winner(som, cities)
+    cities = np.array([cities[i] for i in idx])
+    plt.title('Initial neighbourhood size {}'.format(init_nb_size))
+    plot_tour(som, cities)
+    tour_length = compute_tour_length(cities)
+    print('Initial neighbourhood size:', init_nb_size, '- Tour length: {:.2f}'.format(tour_length))
 
 # 4.3 - Votes of MPs
-votes, parties, genders, districts = load_mp('datasets/votes.dat', 'datasets/mpparty.dat',
-                                             'datasets/mpsex.dat', 'datasets/mpdistrict.dat')
-som = SOM(dim=2, n_nodes=100, learning_rate=0.5, n_epochs=50, init_nb_size=10)
-som.learn(votes)
-plot_mp(som, votes, parties, genders, districts)
+# votes, parties, genders, districts = load_mp('datasets/votes.dat', 'datasets/mpparty.dat',
+#                                              'datasets/mpsex.dat', 'datasets/mpdistrict.dat')
+# som = SOM(dim=2, n_nodes=100, learning_rate=0.5, n_epochs=50, init_nb_size=10)
+# som.learn(votes)
+# plot_mp(som, votes, parties, genders, districts)
