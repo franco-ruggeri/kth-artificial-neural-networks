@@ -114,12 +114,12 @@ def plot_mp(som, votes, parties, genders, districts):
     # genders
     labels = ['male', 'female']
     genders = [g+1 for g in genders]    # to distinguish the color between nobody and men in the grid
-    # plot_mp_colored(winners, genders, side, 'Output space (colored by gender)', labels=labels)
+    plot_mp_colored(winners, genders, side, 'Output space (colored by gender)', labels=labels)
 
     # districts
     # labels = [str(d) for d in districts]
     # plot_mp_colored(winners, districts, side, labels=labels)
-    # plot_mp_colored(winners, districts, side, 'Output space (colored by district)')
+    plot_mp_colored(winners, districts, side, 'Output space (colored by district)')
 
 
 np.random.seed(1)
@@ -147,6 +147,6 @@ for init_nb_size in np.arange(2, 9, 1):
 # 4.3 - Votes of MPs
 votes, parties, genders, districts = load_mp('datasets/votes.dat', 'datasets/mpparty.dat',
                                              'datasets/mpsex.dat', 'datasets/mpdistrict.dat')
-som = SOM(dim=2, n_nodes=100, learning_rate=0.2, n_epochs=20, init_nb_size=20)
+som = SOM(dim=2, n_nodes=100, learning_rate=0.5, n_epochs=100, init_nb_size=10)
 som.learn(votes)
 plot_mp(som, votes, parties, genders, districts)
