@@ -114,23 +114,23 @@ def plot_mp(som, votes, parties, genders, districts):
     # genders
     labels = ['male', 'female']
     genders = [g+1 for g in genders]    # to distinguish the color between nobody and men in the grid
-    plot_mp_colored(winners, genders, side, 'Output space (colored by gender)', labels=labels)
+    # plot_mp_colored(winners, genders, side, 'Output space (colored by gender)', labels=labels)
 
     # districts
     # labels = [str(d) for d in districts]
     # plot_mp_colored(winners, districts, side, labels=labels)
-    plot_mp_colored(winners, districts, side, 'Output space (colored by district)')
+    # plot_mp_colored(winners, districts, side, 'Output space (colored by district)')
 
 
 np.random.seed(1)
 
-# # 4.1 - Animals
-# attributes, names = load_animals('datasets/animals.dat', 'datasets/animalnames.txt')
-# som = SOM(dim=1, n_nodes=100, learning_rate=0.2, n_epochs=20, init_nb_size=20)
-# som.learn(attributes)
-# idx = sort_by_winner(som, attributes)
-# names = [names[i] for i in idx]
-# print('Sorted animals:', names)
+# 4.1 - Animals
+attributes, names = load_animals('datasets/animals.dat', 'datasets/animalnames.txt')
+som = SOM(dim=1, n_nodes=100, learning_rate=0.2, n_epochs=20, init_nb_size=50)
+som.learn(attributes)
+idx = sort_by_winner(som, attributes)
+names = [names[i] for i in idx]
+print('Sorted animals:', names)
 
 # 4.2 - Cyclic tour
 for init_nb_size in np.arange(2, 9, 1):
@@ -139,14 +139,14 @@ for init_nb_size in np.arange(2, 9, 1):
     som.learn(cities)
     idx = sort_by_winner(som, cities)
     cities = np.array([cities[i] for i in idx])
-    plt.title('Initial neighbourhood size {}'.format(init_nb_size))
-    plot_tour(som, cities)
+    # plt.title('Initial neighbourhood size {}'.format(init_nb_size))
+    # plot_tour(som, cities)
     tour_length = compute_tour_length(cities)
     print('Initial neighbourhood size:', init_nb_size, '- Tour length: {:.2f}'.format(tour_length))
 
 # 4.3 - Votes of MPs
-# votes, parties, genders, districts = load_mp('datasets/votes.dat', 'datasets/mpparty.dat',
-#                                              'datasets/mpsex.dat', 'datasets/mpdistrict.dat')
-# som = SOM(dim=2, n_nodes=100, learning_rate=0.5, n_epochs=50, init_nb_size=10)
-# som.learn(votes)
-# plot_mp(som, votes, parties, genders, districts)
+votes, parties, genders, districts = load_mp('datasets/votes.dat', 'datasets/mpparty.dat',
+                                             'datasets/mpsex.dat', 'datasets/mpdistrict.dat')
+som = SOM(dim=2, n_nodes=100, learning_rate=0.2, n_epochs=20, init_nb_size=20)
+som.learn(votes)
+plot_mp(som, votes, parties, genders, districts)

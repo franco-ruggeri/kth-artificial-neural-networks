@@ -75,6 +75,7 @@ class SOM:
 
                 # debug
                 # print('Epoch:', i)
+                # print('Winner:', winner)
                 # print('Neighbourhood size:', neighbourhood_size)
                 # print('Actual neighbourhood size:', len(neighbourhood))
                 # print()
