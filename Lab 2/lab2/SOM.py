@@ -27,10 +27,19 @@ def _neighbourhood_1d(winner, n_nodes, neighbourhood_size, circular):
 
 
 def _neighbourhood_2d(winner, side, neighbourhood_size):
+<<<<<<< HEAD
     """Get neighbourhood, represented as indexes, of a node. The node itself is included. 2D version."""
     distances = [manhattan(i, j) for j in range(side) for i in range(side)]
     distances = sorted(distances)
     return np.array(distances[:neighbourhood_size])
+=======
+    """
+    Get neighbourhood, represented as indexes, of a node. The node itself is included. 2D version.
+    The neighbourhood size represents the "radius" of the neighbourhood, not the total size ("area").
+    """
+    return np.array([(i, j) for j in range(side) for i in range(side)
+                     if manhattan(winner, (i, j)) <= neighbourhood_size])
+>>>>>>> c8abaae2470f708406423fb6613e12dbb0b2b7d2
 
 
 def _select_distance(distance):
@@ -70,6 +79,13 @@ class SOM:
                 neighbourhood_size = round(self._init_nb_size / self.n_epochs * (self.n_epochs - i))
                 neighbourhood = self._neighbourhood(winner, neighbourhood_size)
                 self._update_weights(p, neighbourhood)
+
+                # debug
+                # print('Epoch:', i)
+                # print('Winner:', winner)
+                # print('Neighbourhood size:', neighbourhood_size)
+                # print('Actual neighbourhood size:', len(neighbourhood))
+                # print()
 
     def winner(self, pattern):
         """Get the index of the winner node."""

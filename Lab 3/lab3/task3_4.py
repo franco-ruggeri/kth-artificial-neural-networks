@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from hebbian_network import Hebbian_Network
+from hopfieldnetwork import HopfieldNetwork
 
-data = np.loadtxt('pict.dat', delimiter=",").reshape(-1,1024)
+data = np.loadtxt('datasets/pict.dat', delimiter=",").reshape(-1,1024)
 
 training_data = data[0:3]
 test_data = data[3:]
@@ -20,8 +20,8 @@ def add_noise(x, percentage):
     return noisy_x
 
 
-hn = Hebbian_Network()
-hn.little_model(training_data)
+hn = HopfieldNetwork()
+hn.learn(training_data)
 print(training_data.shape)
 
 #noise_levels = np.arange(1, 6)*0.10
@@ -45,7 +45,7 @@ for i in range(training_data.shape[0]):
 plt.plot(noise_levels, amount_recovered[0], label="p1")
 plt.plot(noise_levels, amount_recovered[1], label="p2")
 plt.plot(noise_levels, amount_recovered[2], label="p3")
-plt.ylabel("Amount of correctly recovered pictures")
+plt.ylabel("Accuracy")
 plt.xlabel("Noise levels")
 plt.legend()
 plt.show()
