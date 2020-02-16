@@ -36,12 +36,12 @@ def assignment3_5_1():
     n_patterns = [3,4,5,6,7]
     ratios = []
     for i in n_patterns:
-        hn = HopfieldNetwork()
+        hn = HopfieldNetwork(self_connections=False)
         training_set = data[0:i]
         test_set = data[i:]
         hn.learn(training_set)
         dist_pic = add_noise(training_set[0], 0.1)
-        recall = hn.recall(dist_pic, synchronous=True)[0]
+        recall = hn.recall(dist_pic, update_rule='synch')[0]
         ratios.append(misclassification(training_set[0], recall))
 
     plt.plot(n_patterns, ratios)
@@ -64,7 +64,7 @@ def assignment3_5_2():
         test_set = random_data[i:]
         hn.learn(training_set)
         dist_pic = add_noise(training_set[0], 0.1)
-        recall = hn.recall(dist_pic, synchronous=True)[0]
+        recall = hn.recall(dist_pic, update_rule='synch')[0]
         ratios.append(misclassification(training_set[0], recall))
 
     plt.plot(n_patterns, ratios)
@@ -86,7 +86,7 @@ def assignment3_5_4():
         hn.learn(random_data[0:i])
         count = 0
         for j in range(np.shape(random_data[0:i])[0]):
-            recall = hn.recall(random_data[j], synchronous=True)[0]
+            recall = hn.recall(random_data[j], update_rule='synch')[0]
             if np.array_equal(recall, random_data[j]):
                 count += 1
 
@@ -112,7 +112,7 @@ def assignment3_5_5():
         for j in range(np.shape(random_data[0:i])[0]):
             dist_pattern = add_noise(random_data[j], 0.1)
 
-            recall = hn.recall(dist_pattern, synchronous=True)[0]
+            recall = hn.recall(dist_pattern, update_rule='synch')[0]
             if np.array_equal(recall, random_data[j]):
                 count += 1
 
@@ -136,14 +136,14 @@ def assignment3_5_6():
     pure_counter = []
     for i in n_patterns:
         hn = HopfieldNetwork()
-        hn.learn(random_data[0:i], self_connections=True)
+        hn.learn(random_data[0:i])
         dist_count = 0
         pure_count = 0
         for j in range(np.shape(random_data[0:i])[0]):
             dist_pattern = add_noise(random_data[j], 0.1)
 
-            dist_recall = hn.recall(dist_pattern, synchronous=True, max_iters=50)[0]
-            pure_recall = hn.recall(random_data[j], synchronous=True, max_iters=50)[0]
+            dist_recall = hn.recall(dist_pattern, update_rule='synch', max_iters=50)[0]
+            pure_recall = hn.recall(random_data[j], update_rule='synch', max_iters=50)[0]
 
             if np.array_equal(dist_recall, random_data[j]):
                 dist_count += 1
@@ -175,14 +175,14 @@ def assignment3_5_7():
     pure_counter = []
     for i in n_patterns:
         hn = HopfieldNetwork()
-        hn.learn(random_data[0:i], self_connections=True)
+        hn.learn(random_data[0:i])
         dist_count = 0
         pure_count = 0
         for j in range(np.shape(random_data[0:i])[0]):
             dist_pattern = add_noise(random_data[j], 0.1)
 
-            dist_recall = hn.recall(dist_pattern, synchronous=True, max_iters=50)[0]
-            pure_recall = hn.recall(random_data[j], synchronous=True, max_iters=50)[0]
+            dist_recall = hn.recall(dist_pattern, update_rule='synch', max_iters=50)[0]
+            pure_recall = hn.recall(random_data[j], update_rule='synch', max_iters=50)[0]
 
             if np.array_equal(dist_recall, random_data[j]):
                 dist_count += 1

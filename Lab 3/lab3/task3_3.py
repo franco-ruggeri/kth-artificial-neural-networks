@@ -18,8 +18,7 @@ for i in [9, 10]:
     energy = result[1]
     print('Energy at attractor of picture {}: {}'.format(i + 1, energy[-1]))
     print('Energy at distorted picture {}: {}'.format(i + 1, hn.compute_energy(patterns[i])))
-    u.plot_energy(energy, title='Energy for distorted picture {}'.format(i))
-    print(energy)
+    u.plot_energy(energy, title='Energy for distorted picture {}'.format(i + 1))
 
 # random state
 state = np.random.choice([-1, 1], size=hn.n_neurons)

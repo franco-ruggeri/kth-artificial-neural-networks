@@ -1,5 +1,4 @@
 import numpy as np
-import utility as u
 
 
 def sign(x):
@@ -9,12 +8,13 @@ def sign(x):
 class HopfieldNetwork:
     """Hopfield Neural Network using Hebbian learning."""
 
-    def __init__(self):
+    def __init__(self, self_connections=False):
         self.weights = None
         self.n_neurons = None
         self.trained = False
+        self.self_connections = self_connections
 
-    def learn(self, patterns, sparse=False, activity=None, self_connections=False):
+    def learn(self, patterns, sparse=False, activity=None):
         """Hebbian learning."""
         self.n_neurons = patterns.shape[1]
         if not self.trained:
@@ -29,7 +29,7 @@ class HopfieldNetwork:
 
         for pattern in patterns:
             self.weights += normalizer*np.outer(pattern, pattern)
-        if not self_connections:
+        if not self.self_connections:
             np.fill_diagonal(self.weights, 0)     # no self connections
         self.trained = True
 
@@ -62,8 +62,7 @@ class HopfieldNetwork:
 
             error = np.sum(np.abs(new_state - state))
             state = new_state
-            # print("Error:", error)
-            # print("Iteration:", iterations)
+            # print("Iteration:", iterations+1)
         return state, energy, True
 
     def _synchronous_update(self, state):
@@ -85,6 +84,7 @@ class HopfieldNetwork:
 
             # plot each 100 iterations
             if plot and i % 100 == 0:
+                import utility as u
                 u.plot_image(state, title='Sequential dynamics - {} iterations'.format(i))
         return state, energy
 

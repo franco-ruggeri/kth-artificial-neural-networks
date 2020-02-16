@@ -30,12 +30,13 @@ patterns = u.load_pictures()
 stored_patterns = patterns[0:3]
 hn = u.store_pictures(stored_patterns)
 
-noise_levels = np.arange(0.1, 1, 0.1)
+step_size = 0.01
+noise_levels = np.arange(0.1, 1, step_size)
 amount_recovered = np.zeros((len(stored_patterns), len(noise_levels)))
 noise_removed = np.zeros((len(stored_patterns), len(noise_levels)))
 
 # add noise and try to remove it
-n_runs = 10
+n_runs = 100
 for n in range(n_runs):
     for i, pattern in enumerate(stored_patterns):
         for j, noise_percentage in enumerate(noise_levels):
@@ -51,9 +52,12 @@ for n in range(n_runs):
                 amount_recovered[i, j] += 1
             else:
                 amount_recovered[i, j] += 0
+
+            # set n_runs=1, step_size=0.1 and uncomment this to plot the attractors
+            # u.plot_image(recall_pic, title='{:d}% noise'.format(int(noise_percentage*100)))
 noise_removed /= n_runs
 amount_recovered /= n_runs
 
 # plot removed noise
 plot_stats(stored_patterns, noise_levels, noise_removed, '% noise', '% removed noise')
-plot_stats(stored_patterns, noise_levels, amount_recovered, '% noise', '# times converged to right attractor')
+plot_stats(stored_patterns, noise_levels, amount_recovered, '% noise', '% convergence to right attractor')
