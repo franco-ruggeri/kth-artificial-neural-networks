@@ -15,3 +15,12 @@ def plot_image(pattern, title=None):
     if title is not None:
         plt.title(title)
     plt.show()
+
+
+def plot_energy(energy, title=None):
+    plt.plot(energy)
+    if title is not None:
+        plt.title(title)
+    plt.xlabel('iteration')
+    plt.ylabel('energy')
+    plt.show()

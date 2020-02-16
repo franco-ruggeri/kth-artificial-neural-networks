@@ -31,7 +31,7 @@ class HopfieldNetwork:
         error = 1
         iterations = -1
         energy = []
-        state = pattern
+        state = pattern.copy()
 
         while error > 0:
             iterations += 1
@@ -40,33 +40,39 @@ class HopfieldNetwork:
 
             if synchronous:
                 new_state = self._synchronous_update(state)
+                energy.append(self.compute_energy(new_state))
             else:
-                new_state = self._asynchronous_update(state, plot)
+                new_state, energy_ = self._asynchronous_update(state, plot)
+                energy.extend(energy_)
 
             error = np.sum(np.abs(new_state - state))
             state = new_state
-            energy.append(self.energy(state))
         return state, energy, True
 
-    def _synchronous_update(self, pattern):
-        return sign(self.weights.dot(pattern))
+    def _synchronous_update(self, state):
+        """Update weights synchronously."""
+        return sign(self.weights.dot(state))
 
-    def _asynchronous_update(self, pattern, plot=False):
+    def _asynchronous_update(self, state, plot=False):
+        """Update weights asynchronous (sequentially)."""
         order = np.arange(self.n_neurons)
         np.random.shuffle(order)
-        state = pattern
-
+        state = state
+        energy = []
         i = 0
+
         for idx in order:
             state[idx] = sign(self.weights[idx].dot(state))
+            energy.append(self.compute_energy(state))
 
+            # plot each 100 iterations
             i += 1
             if plot and i % 100 == 0:
                 u.plot_image(state, title='Sequential dynamics - {} iterations'.format(i))
+        return state, energy
 
-        return state
-
-    def energy(self, x):
-        product = np.linalg.multi_dot([x, self.weights, x])
+    def compute_energy(self, state):
+        """Compute energy (Lyapunov function)."""
+        product = np.linalg.multi_dot([state, self.weights, state])
         energy = -np.sum(product)
         return energy
