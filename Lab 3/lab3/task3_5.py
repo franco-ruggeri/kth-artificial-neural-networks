@@ -136,7 +136,7 @@ def assignment3_5_6():
     pure_counter = []
     for i in n_patterns:
         hn = HopfieldNetwork()
-        hn.learn(random_data[0:i], remove_self_connections=True)
+        hn.learn(random_data[0:i], self_connections=True)
         dist_count = 0
         pure_count = 0
         for j in range(np.shape(random_data[0:i])[0]):
@@ -175,7 +175,7 @@ def assignment3_5_7():
     pure_counter = []
     for i in n_patterns:
         hn = HopfieldNetwork()
-        hn.learn(random_data[0:i], remove_self_connections=True)
+        hn.learn(random_data[0:i], self_connections=True)
         dist_count = 0
         pure_count = 0
         for j in range(np.shape(random_data[0:i])[0]):

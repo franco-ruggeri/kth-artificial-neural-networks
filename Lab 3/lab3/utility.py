@@ -1,4 +1,19 @@
+import numpy as np
 import matplotlib.pyplot as plt
+from hopfieldnetwork import HopfieldNetwork
+
+
+def load_pictures():
+    return np.loadtxt('datasets/pict.dat', delimiter=",").reshape(-1, 1024)
+
+
+def store_pictures(patterns):
+    hn = HopfieldNetwork()
+    hn.learn(patterns)
+    if not check_stability(hn, patterns):
+        print('Error, patterns not stored.')
+        exit(-1)
+    return hn
 
 
 def check_stability(hn, patterns):

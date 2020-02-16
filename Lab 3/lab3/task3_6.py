@@ -28,7 +28,7 @@ def assignment3_6_1():
             count = 0
             for i in range(pattern):
                 hn = HopfieldNetwork()
-                hn.learn(training_set[0:i], sparse=True, activity=0.1, remove_self_connections=True)
+                hn.learn(training_set[0:i], sparse=True, activity=0.1, self_connections=True)
                 recall = hn.recall(training_set[i-1], update_rule='sparse', theta=theta)[0]
                 if np.array_equal(recall, training_set[i-1]):
                     count += 1

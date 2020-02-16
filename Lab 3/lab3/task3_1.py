@@ -28,7 +28,7 @@ max_iters = round(np.log(original_patterns.shape[1]))   # see lab instructions
 
 # recall from distorted patterns
 for i in range(len(distorted_patterns)):
-    result = hn.recall(distorted_patterns[i], synchronous=True, max_iters=max_iters)
+    result = hn.recall(distorted_patterns[i], update_rule='synch', max_iters=max_iters)
     if result[2]:
         state = result[0]
         idx = np.where((original_patterns == state).all(axis=1))[0]
@@ -47,7 +47,7 @@ gridsearch = np.where(gridsearch == 1, 1, -1)
 # search attractors
 attractors = []
 for i in range(256):
-    result = hn.recall(gridsearch[i], synchronous=True, max_iters=max_iters)
+    result = hn.recall(gridsearch[i], update_rule='synch', max_iters=max_iters)
     if result[2]:
         attractor = result[0]
         attractors.append(attractor)

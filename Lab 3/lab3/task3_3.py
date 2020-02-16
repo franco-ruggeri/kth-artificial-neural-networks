@@ -1,19 +1,12 @@
 import numpy as np
 import utility as u
-from hopfieldnetwork import HopfieldNetwork
 
 np.random.seed(100)
 
-# load data
-patterns = np.loadtxt('datasets/pict.dat', delimiter=",").reshape(-1, 1024)
-
-# store first 3 images
+# load and store pictures
+patterns = u.load_pictures()
 stored_patterns = patterns[0:3]
-hn = HopfieldNetwork()
-hn.learn(stored_patterns)
-if not u.check_stability(hn, stored_patterns):
-    print('Error, patterns not stored.')
-    exit(-1)
+hn = u.store_pictures(stored_patterns)
 
 # energy at attractors
 for i in range(len(stored_patterns)):
@@ -33,13 +26,13 @@ state = np.random.choice([-1, 1], size=hn.n_neurons)
 
 # random weight matrix
 hn.weights = np.random.randn(hn.n_neurons, hn.n_neurons)
-result = hn.recall(state)
+result = hn.recall(state, update_rule='asynch')
 # u.plot_image(state)
 # u.plot_image(result[0])
 u.plot_energy(result[1], title='Energy with asymmetric random weight matrix')
 
 # symmetric weight matrix
 hn.weights = 0.5 * hn.weights + hn.weights.T
-result = hn.recall(state)
+result = hn.recall(state, update_rule='asynch')
 # u.plot_image(result[0])
 u.plot_energy(result[1], title='Energy with symmetric random weight matrix')
