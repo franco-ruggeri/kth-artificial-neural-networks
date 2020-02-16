@@ -1,51 +1,35 @@
-import matplotlib.pyplot as plt
 import numpy as np
+import utility as u
 from hopfieldnetwork import HopfieldNetwork
 
+np.random.seed(100)
 
-data = np.loadtxt('pict.dat', delimiter=",").reshape(-1, 1024)
-training_data = data[0:3]
-test_data = data[3:]
+# load data
+patterns = np.loadtxt('datasets/pict.dat', delimiter=",").reshape(-1, 1024)
 
+# store first 3 images
+stored_patterns = patterns[0:3]
 hn = HopfieldNetwork()
-hn.learn(training_data)
+hn.learn(stored_patterns)
+if not u.check_stability(hn, stored_patterns):
+    print('Error, patterns not stored.')
+    exit(-1)
 
-# check stability
-def check_stability(training_data):
+# display stored patterns
+for p in stored_patterns:
+    u.plot_image(p)
 
-    converged_patterns = []
-    for pattern in training_data:
-        p, iterations = hn.recall(pattern, check_convergence=True)
-        converged_patterns.append(iterations)
+# complete pattern
+for i in [9, 10]:
+    recalled = hn.recall(patterns[i], synchronous=True)[0]
+    u.plot_image(patterns[i])
+    u.plot_image(recalled)
 
-    return converged_patterns
-
-def plot_images(pattern):
-
-    pattern = pattern.reshape(32,32)
-    plt.imshow(pattern)
-    plt.show()
-
-
-# p10 = test_data[-2]
-# new_p10 = hn.recall(p10)[0]
-#
-# pic1 = plot_images(training_data[0])
-# pic2 = plot_images(p10)
-# pic3 = plot_images(new_p10)
-
-
-# p11 = test_data[-1]
-# recalled_p11 = hn.recall(p11)[0]
-#
-# pic1 = plot_images(training_data[1])
-# pic2 = plot_images(training_data[2])
-# pic3 = plot_images(p11)
-# pic4 = plot_images(recalled_p11)
-
-p11 = test_data[-1]
-new_p11, iterartions = hn.recall(p11, check_convergence=True)
-
-print(iterartions)
-
-
+# sequential (asynchronous) update
+for i in [9, 10]:
+    converged = False
+    while not converged:
+        result = hn.recall(patterns[i], synchronous=False, max_iters=100, plot=True)
+        converged = result[2]
+        state = result[0]
+        u.plot_image(state, title='Sequential dynamics - Converged')

@@ -1,4 +1,5 @@
 import numpy as np
+import utility as u
 
 
 def sign(x):
@@ -10,61 +11,60 @@ class HopfieldNetwork:
 
     def __init__(self):
         self.weights = None
+        self.n_neurons = None
         self.trained = False
 
     def learn(self, patterns):
         """Hebbian learning."""
-        N = patterns.shape[1]
-        normalizer = 1/N
+        self.n_neurons = patterns.shape[1]
         if not self.trained:
-            self.weights = np.zeros((N, N))
+            self.weights = np.zeros((self.n_neurons, self.n_neurons))
+        normalizer = 1 / self.n_neurons
 
         for pattern in patterns:
             self.weights += normalizer*np.outer(pattern, pattern)
         np.fill_diagonal(self.weights, 0)     # no self connections
         self.trained = True
 
-    def recall(self, pattern, check_convergence=False, max_iters=None):
+    def recall(self, pattern, synchronous=False, max_iters=None, plot=False):
         """Feed pattern into the network to recall a stored pattern."""
         error = 1
         iterations = -1
         energy = []
-
         state = pattern
+
         while error > 0:
             iterations += 1
             if iterations == max_iters:
-                return None, energy  # not converged
+                return state, energy, False  # not converged
 
-            new_state = self.synch_update(state)
+            if synchronous:
+                new_state = self._synchronous_update(state)
+            else:
+                new_state = self._asynchronous_update(state, plot)
+
             error = np.sum(np.abs(new_state - state))
             state = new_state
             energy.append(self.energy(state))
-            if check_convergence:
-                return state, iterations, energy
-        return state, energy
+        return state, energy, True
 
-    def synch_update(self, pattern):
+    def _synchronous_update(self, pattern):
         return sign(self.weights.dot(pattern))
 
-    def asynch_update(self, x):
-        dim = np.shape(x)[0]
-        new = x.copy()
+    def _asynchronous_update(self, pattern, plot=False):
+        order = np.arange(self.n_neurons)
+        np.random.shuffle(order)
+        state = pattern
 
-        for unit in range(dim):
-            weight_sum = 0
-            i = np.random.randint(0,dim)
-            for j in range(dim):
+        i = 0
+        for idx in order:
+            state[idx] = sign(self.weights[idx].dot(state))
 
-                weight_sum += np.multiply(self.weights[i][j], new[j])
+            i += 1
+            if plot and i % 100 == 0:
+                u.plot_image(state, title='Sequential dynamics - {} iterations'.format(i))
 
-            new[i] = np.sign(weight_sum)
-
-        # plot_new = new.reshape(32, 32)
-        # plt.imshow(plot_new)
-        # plt.show()
-
-        return new
+        return state
 
     def energy(self, x):
         product = np.linalg.multi_dot([x, self.weights, x])

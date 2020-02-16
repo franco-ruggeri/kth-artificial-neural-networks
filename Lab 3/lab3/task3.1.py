@@ -1,4 +1,5 @@
 import numpy as np
+import utility as u
 from hopfieldnetwork import HopfieldNetwork
 
 
@@ -11,13 +12,9 @@ x3 = [-1, 1, 1, -1, -1, 1, -1, 1]
 original_patterns = np.vstack((x1, x2, x3))
 hn = HopfieldNetwork()
 hn.learn(original_patterns)
-
-# check if the network stored the patterns
-for pattern in original_patterns:
-    state = hn.recall(pattern)[0]
-    if any(state != pattern):
-        print('Error')
-        exit(-1)
+if not u.check_stability(hn, original_patterns):
+    print('Error, patterns not stored.')
+    exit(-1)
 
 
 ############
@@ -31,9 +28,10 @@ max_iters = round(np.log(original_patterns.shape[1]))   # see lab instructions
 
 # recall from distorted patterns
 for i in range(len(distorted_patterns)):
-    state = hn.recall(distorted_patterns[i], max_iters=max_iters)[0]
-    idx = np.where((original_patterns == state).all(axis=1))[0]
-    if len(idx) > 0:
+    result = hn.recall(distorted_patterns[i], synchronous=True, max_iters=max_iters)
+    if result[2]:
+        state = result[0]
+        idx = np.where((original_patterns == state).all(axis=1))[0]
         print('Distorted pattern', i+1, 'converged to stored pattern', idx[0]+1)
     else:
         print('Distorted pattern', i+1, 'not converged to any stored pattern')
@@ -49,8 +47,9 @@ gridsearch = np.where(gridsearch == 1, 1, -1)
 # search attractors
 attractors = []
 for i in range(256):
-    attractor = hn.recall(gridsearch[i], max_iters=max_iters)[0]
-    if attractor is not None:
+    result = hn.recall(gridsearch[i], synchronous=True, max_iters=max_iters)
+    if result[2]:
+        attractor = result[0]
         attractors.append(attractor)
 attractors = np.unique(attractors, axis=0)
 print('Number of attractors:', len(attractors))
