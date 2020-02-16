@@ -23,4 +23,5 @@ def plot_energy(energy, title=None):
         plt.title(title)
     plt.xlabel('iteration')
     plt.ylabel('energy')
+    plt.xlim([0, len(energy)])
     plt.show()

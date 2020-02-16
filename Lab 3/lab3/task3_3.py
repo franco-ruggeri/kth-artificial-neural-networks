@@ -17,44 +17,29 @@ if not u.check_stability(hn, stored_patterns):
 
 # energy at attractors
 for i in range(len(stored_patterns)):
-    print('Energy at attractor of pattern {}: {}'.format(i+1, hn.compute_energy(patterns[i])))
+    print('Energy at attractor of picture {}: {}'.format(i + 1, hn.compute_energy(patterns[i])))
 
 # energy at attractors of and at distorted patterns
 for i in [9, 10]:
     result = hn.recall(patterns[i])
     energy = result[1]
-    print('Energy at attractor of pattern {}: {}'.format(i + 1, energy[-1]))
-    print('Energy at distorted pattern {}: {}'.format(i+1, hn.compute_energy(patterns[i])))
-    u.plot_energy(energy)
+    print('Energy at attractor of picture {}: {}'.format(i + 1, energy[-1]))
+    print('Energy at distorted picture {}: {}'.format(i + 1, hn.compute_energy(patterns[i])))
+    u.plot_energy(energy, title='Energy for distorted picture {}'.format(i))
+    print(energy)
 
+# random state
+state = np.random.choice([-1, 1], size=hn.n_neurons)
 
-#print(iterations)
-#plt.plot(energy)
-#plt.show()
+# random weight matrix
+hn.weights = np.random.randn(hn.n_neurons, hn.n_neurons)
+result = hn.recall(state)
+# u.plot_image(state)
+# u.plot_image(result[0])
+u.plot_energy(result[1], title='Energy with asymmetric random weight matrix')
 
-# Random weight matrix
-# hn_2 = HopfieldNetwork()
-# dimension = 1024
-# W = np.random.normal(0,1,(1024,1024))
-# hn_2.weights = W
-# start_state = np.random.rand(dimension)
-#
-#
-# recalled_start, e1 = hn_2.recall(start_state, max_iters=200)
-#
-# plt.plot(e1)
-# plt.show()
-
-
-
-# Symmetric weight matrix
-
-# hn_3 = HopfieldNetwork()
-# Wsym = 0.5*(W+np.transpose(W))
-# hn_3.weights = Wsym
-#
-# recalled, e2 = hn_3.recall(start_state, max_iters=200)
-# plt.plot(e2)
-# plt.show()
-
-
+# symmetric weight matrix
+hn.weights = 0.5 * hn.weights + hn.weights.T
+result = hn.recall(state)
+# u.plot_image(result[0])
+u.plot_energy(result[1], title='Energy with symmetric random weight matrix')
