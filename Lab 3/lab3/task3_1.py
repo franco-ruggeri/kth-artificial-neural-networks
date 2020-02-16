@@ -10,7 +10,7 @@ x1 = [-1, -1, 1, -1, 1, -1, -1, 1]
 x2 = [-1, -1, -1, -1, -1, 1, -1, -1]
 x3 = [-1, 1, 1, -1, -1, 1, -1, 1]
 original_patterns = np.vstack((x1, x2, x3))
-hn = HopfieldNetwork()
+hn = HopfieldNetwork(self_connections=True)
 hn.learn(original_patterns)
 if not u.check_stability(hn, original_patterns):
     print('Error, patterns not stored.')
@@ -24,15 +24,17 @@ x1d = [1, -1, 1, -1, 1, -1, -1, 1]
 x2d = [1, 1, -1, -1, -1, 1, -1, -1]
 x3d = [1, 1, 1, -1, 1, 1, -1, 1]
 distorted_patterns = np.vstack((x1d, x2d, x3d))
-max_iters = round(np.log(original_patterns.shape[1]))   # see lab instructions
+max_iters = 100
 
 # recall from distorted patterns
 for i in range(len(distorted_patterns)):
     result = hn.recall(distorted_patterns[i], update_rule='synch', max_iters=max_iters)
     if result[2]:
         state = result[0]
-        idx = np.where((original_patterns == state).all(axis=1))[0]
-        print('Distorted pattern', i+1, 'converged to stored pattern', idx[0]+1)
+        if np.array_equal(original_patterns[i], state):
+            print('Distorted pattern', i+1, 'correctly converged to stored pattern', i+1)
+        else:
+            print('Distorted pattern', i+1, 'converged to another state')
     else:
         print('Distorted pattern', i+1, 'not converged to any stored pattern')
 
