@@ -1,18 +1,14 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from hebbian_network import Hebbian_Network
+from hopfieldnetwork import HopfieldNetwork
 
 
-
-
-
-data = np.loadtxt('pict.dat', delimiter=",").reshape(-1,1024)
-
+data = np.loadtxt('pict.dat', delimiter=",").reshape(-1, 1024)
 training_data = data[0:3]
 test_data = data[3:]
 
-hn = Hebbian_Network()
-hn.little_model(training_data)
+hn = HopfieldNetwork()
+hn.learn(training_data)
 
 # check stability
 def check_stability(training_data):

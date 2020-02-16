@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from hebbian_network import Hebbian_Network
+from hopfieldnetwork import HopfieldNetwork
 
 data = np.loadtxt('pict.dat', delimiter=",").reshape(-1,1024)
 
@@ -20,8 +20,8 @@ def add_noise(x, percentage):
     return noisy_x
 
 
-hn = Hebbian_Network()
-hn.little_model(training_data)
+hn = HopfieldNetwork()
+hn.learn(training_data)
 print(training_data.shape)
 
 #noise_levels = np.arange(1, 6)*0.10

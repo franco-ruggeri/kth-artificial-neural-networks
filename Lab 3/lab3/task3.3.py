@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from hebbian_network import Hebbian_Network
+from hopfieldnetwork import HopfieldNetwork
 
 
 data = np.loadtxt('pict.dat', delimiter=",").reshape(-1,1024)
@@ -25,7 +25,7 @@ test_data = data[3:]
 #plt.show()
 
 # Random weight matrix
-hn_2 = Hebbian_Network()
+hn_2 = HopfieldNetwork()
 dimension = 1024
 W = np.random.normal(0,1,(1024,1024))
 hn_2.weights = W
@@ -41,7 +41,7 @@ plt.show()
 
 # Symmetric weight matrix
 
-hn_3 = Hebbian_Network()
+hn_3 = HopfieldNetwork()
 Wsym = 0.5*(W+np.transpose(W))
 hn_3.weights = Wsym
 
