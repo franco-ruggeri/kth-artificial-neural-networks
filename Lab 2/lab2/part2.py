@@ -133,6 +133,14 @@ names = [names[i] for i in idx]
 print('Sorted animals:', names)
 
 # 4.2 - Cyclic tour
+<<<<<<< HEAD
+cities = load_cities('datasets/cities.dat')
+som = SOM(dim=1, n_nodes=10, learning_rate=0.5, n_epochs=20, init_nb_size=2, circular=True)
+som.learn(cities)
+plot_tour(som, cities)
+tour_length = compute_tour_length(som)
+print('Tour length:', tour_length)
+=======
 for init_nb_size in np.arange(2, 9, 1):
     cities = load_cities('datasets/cities.dat')
     som = SOM(dim=1, n_nodes=10, learning_rate=0.2, n_epochs=20, init_nb_size=init_nb_size, circular=True)
@@ -143,6 +151,7 @@ for init_nb_size in np.arange(2, 9, 1):
     # plot_tour(som, cities)
     tour_length = compute_tour_length(cities)
     print('Initial neighbourhood size:', init_nb_size, '- Tour length: {:.2f}'.format(tour_length))
+>>>>>>> c8abaae2470f708406423fb6613e12dbb0b2b7d2
 
 # 4.3 - Votes of MPs
 votes, parties, genders, districts = load_mp('datasets/votes.dat', 'datasets/mpparty.dat',

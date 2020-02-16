@@ -14,19 +14,27 @@ class HopfieldNetwork:
         self.n_neurons = None
         self.trained = False
 
-    def learn(self, patterns):
+    def learn(self, patterns, sparse = False, activity = None, remove_self_connections = False):
         """Hebbian learning."""
         self.n_neurons = patterns.shape[1]
         if not self.trained:
             self.weights = np.zeros((self.n_neurons, self.n_neurons))
         normalizer = 1 / self.n_neurons
 
+        if sparse:
+            if activity == None:
+                raise ValueError("Activity level not set")
+
+            activity = np.ones(patterns.shape)*activity
+            patterns = patterns - activity
+
         for pattern in patterns:
             self.weights += normalizer*np.outer(pattern, pattern)
-        np.fill_diagonal(self.weights, 0)     # no self connections
+        if remove_self_connections:
+            np.fill_diagonal(self.weights, 0)     # no self connections
         self.trained = True
 
-    def recall(self, pattern, synchronous=False, max_iters=None, plot=False):
+    def recall(self, pattern, update_rule=None, max_iters=None, theta=None, plot=False):
         """Feed pattern into the network to recall a stored pattern."""
         error = 1
         iterations = -1
@@ -38,15 +46,25 @@ class HopfieldNetwork:
             if iterations == max_iters:
                 return state, energy, False  # not converged
 
-            if synchronous:
+            if update_rule == 'synch':
                 new_state = self._synchronous_update(state)
                 energy.append(self.compute_energy(new_state))
-            else:
+
+            elif update_rule == 'asynch':
                 new_state, energy_ = self._asynchronous_update(state, plot)
                 energy.extend(energy_)
 
+            elif update_rule == 'sparse':
+                new_state = self._sparse_update(state, theta)
+                energy.append(self.compute_energy(new_state))
+
+            else:
+                raise ValueError("No update rule is specified")
+
             error = np.sum(np.abs(new_state - state))
             state = new_state
+            #print("Error:", error)
+            #print("Iteration:", iterations)
         return state, energy, True
 
     def _synchronous_update(self, state):
@@ -70,6 +88,10 @@ class HopfieldNetwork:
             if plot and i % 100 == 0:
                 u.plot_image(state, title='Sequential dynamics - {} iterations'.format(i))
         return state, energy
+
+    def _sparse_update(self, state, theta):
+        """Update the weights sparsely"""
+        return 0.5 + 0.5*sign(self.weights.dot(state) - theta)
 
     def compute_energy(self, state):
         """Compute energy (Lyapunov function)."""

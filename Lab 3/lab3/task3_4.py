@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from hopfieldnetwork import HopfieldNetwork
 
-data = np.loadtxt('pict.dat', delimiter=",").reshape(-1,1024)
+data = np.loadtxt('datasets/pict.dat', delimiter=",").reshape(-1,1024)
 
 training_data = data[0:3]
 test_data = data[3:]
@@ -45,7 +45,7 @@ for i in range(training_data.shape[0]):
 plt.plot(noise_levels, amount_recovered[0], label="p1")
 plt.plot(noise_levels, amount_recovered[1], label="p2")
 plt.plot(noise_levels, amount_recovered[2], label="p3")
-plt.ylabel("Amount of correctly recovered pictures")
+plt.ylabel("Accuracy")
 plt.xlabel("Noise levels")
 plt.legend()
 plt.show()

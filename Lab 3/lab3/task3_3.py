@@ -21,7 +21,7 @@ for i in range(len(stored_patterns)):
 
 # energy at attractors of and at distorted patterns
 for i in [9, 10]:
-    result = hn.recall(patterns[i])
+    result = hn.recall(patterns[i], update_rule='asynch')
     energy = result[1]
     print('Energy at attractor of picture {}: {}'.format(i + 1, energy[-1]))
     print('Energy at distorted picture {}: {}'.format(i + 1, hn.compute_energy(patterns[i])))
