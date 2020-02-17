@@ -3,16 +3,6 @@ import matplotlib.pyplot as plt
 import utility as u
 
 
-def add_noise(pattern, percentage):
-    noisy_pattern = pattern.copy()
-    shuffle_size = int(percentage * len(pattern))
-    positions = np.random.choice(pattern.shape[0], shuffle_size, replace=False)
-    old_values = noisy_pattern[positions]
-    new_values = np.where(old_values == 1, -1, 1)
-    noisy_pattern[positions] = new_values
-    return noisy_pattern
-
-
 def plot_stats(patterns, x, y, xlabel, ylabel):
     for i, pattern in enumerate(patterns):
         plt.plot(x, y[i], label='p' + str(i))
@@ -40,7 +30,7 @@ n_runs = 100
 for n in range(n_runs):
     for i, pattern in enumerate(stored_patterns):
         for j, noise_percentage in enumerate(noise_levels):
-            distort_pic = add_noise(pattern, noise_percentage)
+            distort_pic = u.add_noise(pattern, noise_percentage)
             recall_pic = hn.recall(distort_pic, update_rule='synch')[0]
 
             # check recovery

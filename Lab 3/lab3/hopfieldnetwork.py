@@ -85,7 +85,7 @@ class HopfieldNetwork:
             # plot each 100 iterations
             if plot and i % 100 == 0:
                 import utility as u
-                u.plot_image(state, title='Sequential dynamics - {} iterations'.format(i))
+                u.plot_picture(state, title='Sequential dynamics - {} iterations'.format(i))
         return state, energy
 
     def _sparse_update(self, state, theta):

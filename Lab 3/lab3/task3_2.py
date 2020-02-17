@@ -10,13 +10,13 @@ hn = u.store_pictures(stored_patterns)
 
 # display stored patterns
 for p in stored_patterns:
-    u.plot_image(p)
+    u.plot_picture(p)
 
 # complete pattern
 for i in [9, 10]:
     recalled = hn.recall(patterns[i], update_rule='synch')[0]
-    u.plot_image(patterns[i])
-    u.plot_image(recalled)
+    u.plot_picture(patterns[i])
+    u.plot_picture(recalled)
 
 # sequential (asynchronous) update
 for i in [9, 10]:
@@ -25,4 +25,4 @@ for i in [9, 10]:
         result = hn.recall(patterns[i], update_rule='asynch', max_iters=100, plot=True)
         converged = result[2]
         state = result[0]
-        u.plot_image(state, title='Sequential dynamics - Converged')
+        u.plot_picture(state, title='Sequential dynamics - Converged')
