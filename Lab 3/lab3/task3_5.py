@@ -26,7 +26,7 @@ def capacity_pictures():
         ratios.append(0)
         for pattern in stored_patterns:
             dist_pattern = u.add_noise(pattern, noise_perc)
-            recall = hn.recall(dist_pattern, update_rule='synch')[0]
+            recall = hn.recall(dist_pattern, synchronous=True)[0]
             ratios[-1] += measure_convergence(pattern, recall)
         ratios[-1] /= n
 
@@ -55,7 +55,7 @@ def capacity_random_patterns():
         ratios.append(0)
         for pattern in stored_patterns:
             dist_pattern = u.add_noise(pattern, noise_perc)
-            recall = hn.recall(dist_pattern, update_rule='synch', max_iters=100)[0]
+            recall = hn.recall(dist_pattern, synchronous=True, max_iters=100)[0]
             ratios[-1] += measure_convergence(pattern, recall)
         ratios[-1] /= n
         print(n)
@@ -95,13 +95,13 @@ def catastrophic_forgetting():
             counter_dist.append(0)
             for pattern in stored_patterns[:-1]:
                 # stability of pure pattern
-                recall_pattern = hn.recall(pattern, update_rule='synch', max_iters=1)[0]
+                recall_pattern = hn.recall(pattern, synchronous=True, max_iters=1)[0]
                 if np.array_equal(recall_pattern, pattern):
                     counter_pure[-1] += 1
 
                 # convergence of distorted pattern
                 dist_pattern = u.add_noise(pattern, noise_perc)
-                recall_pattern = hn.recall(dist_pattern, update_rule='synch', max_iters=100)[0]
+                recall_pattern = hn.recall(dist_pattern, synchronous=True, max_iters=100)[0]
                 if np.array_equal(recall_pattern, pattern):
                     counter_dist[-1] += 1
             counter_pure[-1] /= (n-1)

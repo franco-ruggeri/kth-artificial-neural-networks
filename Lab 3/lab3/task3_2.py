@@ -14,7 +14,7 @@ for p in stored_patterns:
 
 # complete pattern
 for i in [9, 10]:
-    recalled = hn.recall(patterns[i], update_rule='synch')[0]
+    recalled = hn.recall(patterns[i], synchronous=True)[0]
     u.plot_picture(patterns[i])
     u.plot_picture(recalled)
 
@@ -22,7 +22,7 @@ for i in [9, 10]:
 for i in [9, 10]:
     converged = False
     while not converged:
-        result = hn.recall(patterns[i], update_rule='asynch', max_iters=100, plot=True)
+        result = hn.recall(patterns[i], synchronous=False, max_iters=100, plot=True)
         converged = result[2]
         state = result[0]
         u.plot_picture(state, title='Sequential dynamics - Converged')

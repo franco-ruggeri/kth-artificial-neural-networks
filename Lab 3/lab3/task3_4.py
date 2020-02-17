@@ -31,7 +31,7 @@ for n in range(n_runs):
     for i, pattern in enumerate(stored_patterns):
         for j, noise_percentage in enumerate(noise_levels):
             distort_pic = u.add_noise(pattern, noise_percentage)
-            recall_pic = hn.recall(distort_pic, update_rule='synch')[0]
+            recall_pic = hn.recall(distort_pic, synchronous=True)[0]
 
             # check recovery
             n_wrong_pixels = len(np.where(recall_pic != pattern)[0])

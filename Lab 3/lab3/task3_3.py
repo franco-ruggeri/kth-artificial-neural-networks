@@ -15,7 +15,7 @@ for i in range(len(stored_patterns)):
 
 # energy at attractors of and at distorted patterns
 for i in [9, 10]:
-    result = hn.recall(patterns[i], update_rule='asynch')
+    result = hn.recall(patterns[i])
     energy = result[1]
     print('Energy at attractor of picture {}: {}'.format(i + 1, energy[-1]))
     print('Energy at distorted picture {}: {}'.format(i + 1, hn._compute_energy(patterns[i])))
@@ -27,14 +27,14 @@ state = np.random.choice([-1, 1], size=hn.n_neurons)
 
 # random weight matrix
 hn.weights = np.random.randn(hn.n_neurons, hn.n_neurons)
-result = hn.recall(state, update_rule='asynch')
+result = hn.recall(state)
 # u.plot_image(state)
 # u.plot_image(result[0])
 u.plot_energy(result[1], label='asymmetric random weight matrix')
 
 # symmetric weight matrix
 hn.weights = 0.5 * hn.weights + hn.weights.T
-result = hn.recall(state, update_rule='asynch')
+result = hn.recall(state)
 # u.plot_image(result[0])
 u.plot_energy(result[1], label='symmetric random weight matrix')
 plt.show()

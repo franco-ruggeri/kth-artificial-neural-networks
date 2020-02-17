@@ -39,7 +39,7 @@ class HopfieldNetwork:
             np.fill_diagonal(self.weights, 0)     # no self connections
         self.trained = True
 
-    def recall(self, pattern, update_rule='asynch', max_iters=None, plot=False):
+    def recall(self, pattern, synchronous=False, max_iters=None, plot=False):
         """Feed pattern into the network to recall a stored pattern."""
         error = 1
         iterations = -1
@@ -51,18 +51,15 @@ class HopfieldNetwork:
             if iterations == max_iters:
                 return state, energy, False  # not converged
 
-            if update_rule == 'synch':
+            if synchronous:
                 new_state, energy_ = self._synchronous_update(state)
                 energy.append(energy_)
-            elif update_rule == 'asynch':
+            else:
                 new_state, energy_ = self._asynchronous_update(state, plot)
                 energy.extend(energy_)
-            else:
-                raise ValueError("Wrong update rule specified")
 
             error = np.sum(np.abs(new_state - state))
             state = new_state
-            # print("Iteration:", iterations+1)
         return state, energy, True
 
     def _synchronous_update(self, state):
