@@ -1,6 +1,6 @@
 import numpy as np
 import utility as u
-import itertools as it
+import matplotlib.pyplot as plt
 from hopfieldnetwork import HopfieldNetwork
 
 
@@ -20,30 +20,33 @@ def generate_random_patterns(n_patterns, dimension, activity):
 np.random.seed(1)
 patterns = u.load_pictures()
 
-thetas = np.arange(0, 10, 0.1)
+thetas = np.arange(0, 3.5, 0.5)
 dimension = 100
 activities = [0.1, 0.05, 0.01]
-bias_pattern_matrix = np.zeros(len(thetas))
+n_patterns = np.arange(1, 101)
 
-print('Row: theta\nCol: # patterns\nValue: # patterns stored')
 for activity in activities:
-    for i, theta in enumerate(thetas):
-        for n in it.count(1):
+    for theta in thetas:
+        convergence = np.zeros(len(n_patterns))
+        for i, n in enumerate(n_patterns):
             np.random.seed(1)
             patterns = generate_random_patterns(n, dimension, activity=activity)
             hn = HopfieldNetwork(sparse=True, bias=theta)
             hn.learn(patterns)
 
-            all_stored = True
+            # check stability of patterns
             for pattern in patterns:
-                recall = hn.recall(pattern)[0]
-                if not np.array_equal(recall, pattern):
-                    all_stored = False
-            if all_stored:
-                bias_pattern_matrix[i] = n
-            else:
-                break   # capacity reached
+                # stability of pure pattern
+                recall = hn.recall(pattern, synchronous=True, max_iters=1)[0]
+                if np.array_equal(recall, pattern):
+                    convergence[i] += 1
+            convergence[i] /= n
+        plt.plot(n_patterns, convergence, label=r'$\theta$={:.2f}'.format(theta))
+        plt.title('Activity {}'.format(activity))
+        plt.xticks(n_patterns)
 
-    print()
-    print('Activity:', activity)
-    print(bias_pattern_matrix)
+    plt.xlabel('# patterns')
+    plt.ylabel('% convergence')
+    plt.xticks(np.arange(10, n_patterns[-1], 10))
+    plt.legend()
+    plt.show()

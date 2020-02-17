@@ -90,19 +90,18 @@ def catastrophic_forgetting():
             stored_patterns = patterns[0:n]
             hn.learn(stored_patterns[-1].reshape(1, -1))
 
-            # check stability of earlier patterns
             counter_pure.append(0)
             counter_dist.append(0)
             for pattern in stored_patterns[:-1]:
                 # stability of pure pattern
-                recall_pattern = hn.recall(pattern, synchronous=True, max_iters=1)[0]
-                if np.array_equal(recall_pattern, pattern):
+                recall = hn.recall(pattern, synchronous=True, max_iters=1)[0]
+                if np.array_equal(recall, pattern):
                     counter_pure[-1] += 1
 
                 # convergence of distorted pattern
                 dist_pattern = u.add_noise(pattern, noise_perc)
-                recall_pattern = hn.recall(dist_pattern, synchronous=True, max_iters=100)[0]
-                if np.array_equal(recall_pattern, pattern):
+                recall = hn.recall(dist_pattern, synchronous=True, max_iters=100)[0]
+                if np.array_equal(recall, pattern):
                     counter_dist[-1] += 1
             counter_pure[-1] /= (n-1)
             counter_dist[-1] /= (n-1)
