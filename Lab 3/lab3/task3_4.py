@@ -21,7 +21,7 @@ stored_patterns = patterns[0:3]
 hn = u.store_pictures(stored_patterns)
 
 step_size = 0.01
-noise_levels = np.arange(0.1, 1, step_size)
+noise_levels = np.arange(0.1, 1+step_size, step_size)
 amount_recovered = np.zeros((len(stored_patterns), len(noise_levels)))
 noise_removed = np.zeros((len(stored_patterns), len(noise_levels)))
 
@@ -44,7 +44,7 @@ for n in range(n_runs):
                 amount_recovered[i, j] += 0
 
             # set n_runs=1, step_size=0.1 and uncomment this to plot the attractors
-            # u.plot_image(recall_pic, title='{:d}% noise'.format(int(noise_percentage*100)))
+            # u.plot_picture(recall_pic, title='{:d}% noise'.format(int(noise_percentage*100)))
 noise_removed /= n_runs
 amount_recovered /= n_runs
 
