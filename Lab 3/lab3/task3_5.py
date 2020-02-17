@@ -26,8 +26,8 @@ def capacity_pictures():
         ratios.append(0)
         for pattern in stored_patterns:
             dist_pattern = u.add_noise(pattern, noise_perc)
-            recall_pattern = hn.recall(dist_pattern, update_rule='synch')[0]
-            ratios[-1] += measure_convergence(pattern, recall_pattern)
+            recall = hn.recall(dist_pattern, update_rule='synch')[0]
+            ratios[-1] += measure_convergence(pattern, recall)
         ratios[-1] /= n
 
     plt.plot(n_patterns, ratios, '-s')
@@ -55,8 +55,8 @@ def capacity_random_patterns():
         ratios.append(0)
         for pattern in stored_patterns:
             dist_pattern = u.add_noise(pattern, noise_perc)
-            recall_pattern = hn.recall(dist_pattern, update_rule='synch', max_iters=100)[0]
-            ratios[-1] += measure_convergence(pattern, recall_pattern)
+            recall = hn.recall(dist_pattern, update_rule='synch', max_iters=100)[0]
+            ratios[-1] += measure_convergence(pattern, recall)
         ratios[-1] /= n
         print(n)
 
@@ -113,10 +113,11 @@ def catastrophic_forgetting():
             end_label += ' with self connections'
         if bias:
             end_label += ' with bias'
-        plt.plot(n_patterns, counter_pure, label='% stable pure patterns' + end_label)
-        plt.plot(n_patterns, counter_dist, label='% converged noisy patterns' + end_label)
+        plt.plot(n_patterns, counter_pure, label='stable pure patterns' + end_label)
+        plt.plot(n_patterns, counter_dist, label='converged noisy patterns' + end_label)
 
     plt.xlabel('# patterns')
+    plt.ylabel('%')
     plt.xticks(np.arange(20, n_patterns[-1], 20))
     plt.legend()
     plt.show()

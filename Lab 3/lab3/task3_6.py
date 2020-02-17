@@ -1,40 +1,49 @@
 import numpy as np
-import matplotlib.pyplot as plt
+import utility as u
+import itertools as it
 from hopfieldnetwork import HopfieldNetwork
 
-data = np.loadtxt('datasets/pict.dat', delimiter=",").reshape(-1,1024)
+
+def generate_random_patterns(n_patterns, dimension, activity):
+    # choice idx of 1s, the number is such that the activity is the wanted one
+    idx = np.random.choice(n_patterns * dimension, size=int(round(activity*n_patterns*dimension)), replace=False)
+
+    # fill 1s in the right positions
+    patterns = np.zeros((n_patterns, dimension))
+    for i in idx:
+        row = int(i / dimension)
+        col = i % dimension
+        patterns[row, col] = 1
+    return patterns
 
 
-def generate_random_patterns(nPatterns, dimension, activity, bias=False):
+np.random.seed(1)
+patterns = u.load_pictures()
 
-    if bias:
-        random_data = np.random.randn(nPatterns, dimension) + 0.5
-    else:
-        random_data = np.random.randn(nPatterns, dimension)
+thetas = np.arange(0, 10, 0.1)
+dimension = 100
+activities = [0.1, 0.05, 0.01]
+bias_pattern_matrix = np.zeros(len(thetas))
 
-    random_patterns = np.where(random_data < activity, 1, 0)
-    return random_patterns
+print('Row: theta\nCol: # patterns\nValue: # patterns stored')
+for activity in activities:
+    for i, theta in enumerate(thetas):
+        for n in it.count(1):
+            np.random.seed(1)
+            patterns = generate_random_patterns(n, dimension, activity=activity)
+            hn = HopfieldNetwork(sparse=True, bias=theta)
+            hn.learn(patterns)
 
-def assignment3_6_1():
+            all_stored = True
+            for pattern in patterns:
+                recall = hn.recall(pattern)[0]
+                if not np.array_equal(recall, pattern):
+                    all_stored = False
+            if all_stored:
+                bias_pattern_matrix[i] = n
+            else:
+                break   # capacity reached
 
-    thetas = np.arange(0, 3, 0.1)
-    n_patterns = np.arange(1,10)
-    dimension = 100
-    bias_pattern_matrix = np.zeros((len(thetas),len(n_patterns)))
-    for idx, theta in enumerate(thetas):
-
-        for jdx, pattern in enumerate(n_patterns):
-            training_set = generate_random_patterns(pattern, dimension, activity=0.1)
-            count = 0
-            for i in range(pattern):
-                hn = HopfieldNetwork()
-                hn.learn(training_set[0:i], sparse=True, activity=0.1, self_connections=True)
-                recall = hn.recall(training_set[i-1], update_rule='sparse', theta=theta)[0]
-                if np.array_equal(recall, training_set[i-1]):
-                    count += 1
-            bias_pattern_matrix[idx][jdx] = count
-
-    print("Rows are the thetas and columns are the number of patterns and the elements how many correctly remembered patterns:")
+    print()
+    print('Activity:', activity)
     print(bias_pattern_matrix)
-
-assignment3_6_1()
