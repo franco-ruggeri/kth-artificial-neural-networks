@@ -83,7 +83,6 @@ class RestrictedBoltzmannMachine():
         epochs = n_iterations
         random.shuffle(visible_trainset)
         partioned_training_set = np.asarray([visible_trainset[int(i*self.batch_size):int((i+1)*self.batch_size)] for i in range(n_batches)])
-        #partioned_training_set = np.asarray(partioned_training_set)
 
         for epoch in range(epochs):
             print("Epoch:", epoch)
