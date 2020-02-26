@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from RBFNN import RBFNN
+from rbfnn import RBFNN
 
 
 def sign(x):

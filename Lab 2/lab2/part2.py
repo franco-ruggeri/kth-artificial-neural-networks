@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from SOM import SOM
+from som import SOM
 
 
 def load_animals(filename_attributes, filename_names):
