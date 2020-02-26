@@ -106,9 +106,10 @@ class DeepBeliefNet():
 
             vis = np.random.rand(n_sample,self.sizes["vis"])
             
-            records.append( [ ax.imshow(vis.reshape(self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True, interpolation=None) ] )
-            
-        anim = stitch_video(fig,records).save("%s.generate%d.mp4"%(name,np.argmax(true_lbl)))            
+            records.append([ax.imshow(vis.reshape(self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True, interpolation=None)])
+
+        # TODO: enable this line after implementing this task
+        # anim = stitch_video(fig, records).save("images/%s.generate%d.mp4" % (name, np.argmax(true_lbl)))
             
         return
 

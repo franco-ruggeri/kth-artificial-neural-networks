@@ -26,8 +26,8 @@ def softmax(support):
       probabilities: shape is (size of mini-batch, number of categories)      
     """
 
-    expsup = np.exp(support-np.sum(support,axis=1)[:,None])
-    return expsup / np.sum(expsup,axis=1)[:,None]
+    expsup = np.exp(support-np.sum(support, axis=1)[:, None])
+    return expsup / np.sum(expsup, axis=1)[:, None]
 
 
 def sample_binary(on_probabilities):
@@ -54,10 +54,10 @@ def sample_categorical(probabilities):
       activations: shape is (size of mini-batch, number of categories)      
     """
     
-    cumsum = np.cumsum(probabilities,axis=1)
-    rand = np.random.random_sample(size=probabilities.shape[0])[:,None]    
+    cumsum = np.cumsum(probabilities, axis=1)
+    rand = np.random.random_sample(size=probabilities.shape[0])[:, None]
     activations = np.zeros(probabilities.shape)
-    activations[range(probabilities.shape[0]),np.argmax((cumsum >= rand),axis=1)] = 1
+    activations[range(probabilities.shape[0]), np.argmax((cumsum >= rand), axis=1)] = 1
     return activations
 
 
@@ -67,10 +67,10 @@ def load_idxfile(filename):
     """
     import struct
         
-    with open(filename,'rb') as _file:
-        if ord(_file.read(1)) != 0 or ord(_file.read(1)) != 0 :
-           raise Exception('Invalid idx file: unexpected magic number!')
-        dtype,ndim = ord(_file.read(1)),ord(_file.read(1))
+    with open(filename, 'rb') as _file:
+        if ord(_file.read(1)) != 0 or ord(_file.read(1)) != 0:
+            raise Exception('Invalid idx file: unexpected magic number!')
+        dtype, ndim = ord(_file.read(1)), ord(_file.read(1))
         shape = [struct.unpack(">I", _file.read(4))[0] for _ in range(ndim)]
         data = np.fromfile(_file, dtype=np.dtype(np.uint8).newbyteorder('>')).reshape(shape)
     return data
@@ -84,10 +84,10 @@ def read_mnist(dim=[28, 28], n_train=60000, n_test=1000):
 
     train_imgs = load_idxfile("datasets/train-images-idx3-ubyte")
     train_imgs = train_imgs / 255.
-    train_imgs = train_imgs.reshape(-1,dim[0]*dim[1])
+    train_imgs = train_imgs.reshape(-1, dim[0]*dim[1])
 
     train_lbls = load_idxfile("datasets/train-labels-idx1-ubyte")
-    train_lbls_1hot = np.zeros((len(train_lbls),10),dtype=np.float32)
+    train_lbls_1hot = np.zeros((len(train_lbls), 10), dtype=np.float32)
     train_lbls_1hot[range(len(train_lbls)),train_lbls] = 1.
 
     test_imgs = load_idxfile("datasets/t10k-images-idx3-ubyte")
@@ -95,25 +95,25 @@ def read_mnist(dim=[28, 28], n_train=60000, n_test=1000):
     test_imgs = test_imgs.reshape(-1,dim[0]*dim[1])
 
     test_lbls = load_idxfile("datasets/t10k-labels-idx1-ubyte")
-    test_lbls_1hot = np.zeros((len(test_lbls),10),dtype=np.float32)
-    test_lbls_1hot[range(len(test_lbls)),test_lbls] = 1.
+    test_lbls_1hot = np.zeros((len(test_lbls), 10), dtype=np.float32)
+    test_lbls_1hot[range(len(test_lbls)), test_lbls] = 1.
 
-    return train_imgs[:n_train],train_lbls_1hot[:n_train],test_imgs[:n_test],test_lbls_1hot[:n_test]
+    return train_imgs[:n_train], train_lbls_1hot[:n_train], test_imgs[:n_test], test_lbls_1hot[:n_test]
 
 
 def viz_rf(weights, it, grid):
     """
     Visualize receptive fields and save 
     """
-    fig, axs = plt.subplots(grid[0],grid[1],figsize=(grid[1],grid[0]))#,constrained_layout=True)
+    fig, axs = plt.subplots(grid[0], grid[1], figsize=(grid[1], grid[0]))#,constrained_layout=True)
     plt.subplots_adjust(left=0,bottom=0,right=1,top=1,wspace=0,hspace=0)        
     imax = abs(weights).max()
     for x in range(grid[0]):
         for y in range(grid[1]):
-            axs[x,y].set_xticks([]);
-            axs[x,y].set_yticks([]);
-            axs[x,y].imshow(weights[:,:,y+grid[1]*x], cmap="bwr", vmin=-imax, vmax=imax, interpolation=None)
-    plt.savefig("rf.iter%06d.png"%it)
+            axs[x, y].set_xticks([]);
+            axs[x, y].set_yticks([]);
+            axs[x, y].imshow(weights[:, :, y+grid[1]*x], cmap="bwr", vmin=-imax, vmax=imax, interpolation=None)
+    plt.savefig("images/rf.iter%06d.png"%it)
     plt.close('all')
 
 
