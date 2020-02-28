@@ -162,7 +162,18 @@ class RestrictedBoltzmannMachine:
             """
 
             # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of visible layer (replace the pass below).
-            pass
+            support = self.bias_v + hidden_minibatch.dot(self.weight_vh.T)
+
+            p_v_labels = softmax(support[:, -self.n_labels:])
+            v_labels = sample_categorical(p_v_labels)
+            print(v_labels.shape)
+            print(p_v_labels.shape)
+
+            p_v_data = sigmoid(support[:, :-self.n_labels])
+            v_data = sample_binary(p_v_data)
+
+            p_v = np.concatenate((p_v_labels, p_v_data), axis=1)
+            v = np.concatenate((v_labels, v_data), axis=1)
 
         else:
 
@@ -193,12 +204,10 @@ class RestrictedBoltzmannMachine:
 
         assert self.weight_v_to_h is not None
 
-        n_samples = visible_minibatch.shape[0]
-
-        # [TODO TASK 4.2] perform same computation as the function 'get_h_given_v' but with directed connections (
-        #  replace the zeros below)
-
-        return np.zeros((n_samples, self.ndim_hidden)), np.zeros((n_samples, self.ndim_hidden))
+        # [TODO TASK 4.2] perform same computation as the function 'get_h_given_v' but with directed connections (replace the zeros below)
+        p_h = sigmoid(self.bias_h + visible_minibatch.dot(self.weight_v_to_h))
+        h = sample_binary(p_h)
+        return p_h, h
 
     def get_v_given_h_dir(self, hidden_minibatch):
         """Compute probabilities p(v|h) and activations v ~ p(v|h)
@@ -219,10 +228,9 @@ class RestrictedBoltzmannMachine:
         if self.is_top:
 
             """
-            Here visible layer has both data and labels. Compute total input for each unit (identical for both 
-            cases), \ 
-            and split into two parts, something like support[:, :-self.n_labels] and support[:, -self.n_labels:]. \
-            Then, for both parts, use the appropriate activation function to get probabilities and a sampling method \
+            Here visible layer has both data and labels. Compute total input for each unit (identical for both cases),
+            and split into two parts, something like support[:, :-self.n_labels] and support[:, -self.n_labels:].
+            Then, for both parts, use the appropriate activation function to get probabilities and a sampling method
             to get activities. The probabilities as well as activities can then be concatenated back into a normal 
             visible layer.
             """
@@ -232,17 +240,16 @@ class RestrictedBoltzmannMachine:
             # this case should never be executed : when the RBM is a part of a DBN and is at the top, it will have
             # not have directed connections.
             # Appropriate code here is to raise an error (replace pass below)
-
-            pass
+            raise RuntimeError('Directed connections used in the top RBM.')
 
         else:
 
             # [TODO TASK 4.2] performs same computaton as the function 'get_v_given_h' but with directed connections
             #  (replace the pass and zeros below)
+            p_v = sigmoid(self.bias_v + hidden_minibatch.dot(self.weight_h_to_v))
+            v = sample_binary(p_v)
 
-            pass
-
-        return np.zeros((n_samples, self.ndim_visible)), np.zeros((n_samples, self.ndim_visible))
+        return p_v, v
 
     def update_generate_params(self, inps, trgs, preds):
         """Update generative weight "weight_h_to_v" and bias "bias_v"
