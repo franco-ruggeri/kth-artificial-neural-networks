@@ -48,8 +48,8 @@ class DeepBeliefNet():
         """
         
         n_samples = true_imgs.shape[0]
-        vis = true_imgs                     # visible layer gets the image data
-        lbl = np.ones(true_lbl.shape)/10.   # start the net by telling you know nothing about labels
+        vis = true_imgs                                 # visible layer gets the image data
+        lbl = np.ones(true_lbl.shape)/self.n_labels     # start the net by telling you know nothing about labels
         
         # [TODO TASK 4.2] fix the image data in the visible layer and drive the network bottom to top. In the top
         #  RBM, run alternating Gibbs sampling and read out the labels (replace pass below and 'predicted_lbl' to
@@ -67,7 +67,13 @@ class DeepBeliefNet():
 
         # read result
         predicted_lbl = vis[:, -self.n_labels:]
-            
+
+        count = 0
+        for i in range(len(predicted_lbl)):
+            if np.array_equal(predicted_lbl[i], np.zeros(10)):
+                count += 1
+        print('no predictions: %d' % count)
+
         print ("accuracy = %.2f%%" % (100.*np.mean(np.argmax(predicted_lbl, axis=1) == np.argmax(true_lbl, axis=1))))
 
     def generate(self, true_lbl, name):
@@ -92,7 +98,8 @@ class DeepBeliefNet():
         # top to the bottom visible layer (replace 'vis' from random to your generated visible layer).
 
         # sample from bias and clamp labels
-        vis = sample_binary(sigmoid(self.rbm_stack["pen+lbl--top"].bias_v) * np.ones((n_sample, self.sizes["pen"])))
+        vis = sample_binary(sigmoid(self.rbm_stack["pen+lbl--top"].bias_v[:-self.n_labels]) *
+                            np.ones((n_sample, self.sizes["pen"])))
         vis = np.concatenate((vis, lbl), axis=1)
 
         # Gibbs sampling
@@ -130,6 +137,7 @@ class DeepBeliefNet():
             self.rbm_stack["hid--pen"].untwine_weights()
             
             self.loadfromfile_rbm(loc="trained_rbm", name="pen+lbl--top")
+            print(self.rbm_stack["pen+lbl--top"].weight_vh)
 
         except IOError:
 

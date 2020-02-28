@@ -11,7 +11,6 @@ def sigmoid(support):
     Returns:
       on_probabilities: shape is (size of mini-batch, size of layer)      
     """
-
     on_probabilities = 1. / (1. + np.exp(-support))
     return on_probabilities
 
@@ -25,7 +24,6 @@ def softmax(support):
     Returns:
       probabilities: shape is (size of mini-batch, number of categories)      
     """
-
     expsup = np.exp(support - np.sum(support, axis=1)[:, None])
     return expsup / np.sum(expsup, axis=1)[:, None]
 
@@ -39,7 +37,6 @@ def sample_binary(on_probabilities):
     Returns:
       activations: shape is (size of mini-batch, size of layer)      
     """
-
     activations = 1. * (on_probabilities >= np.random.random_sample(size=on_probabilities.shape))
     return activations
 
@@ -53,7 +50,6 @@ def sample_categorical(probabilities):
     Returns:
       activations: shape is (size of mini-batch, number of categories)      
     """
-
     cumsum = np.cumsum(probabilities, axis=1)
     rand = np.random.random_sample(size=probabilities.shape[0])[:, None]
     activations = np.zeros(probabilities.shape)
@@ -80,7 +76,6 @@ def read_mnist(dim=[28, 28], n_train=60000, n_test=1000):
     """
     Read mnist train and test data. Images are normalized to be in range [0,1]. Labels are one-hot coded.
     """
-
     train_imgs = load_idxfile("datasets/train-images-idx3-ubyte")
     train_imgs = train_imgs / 255.
     train_imgs = train_imgs.reshape(-1, dim[0] * dim[1])

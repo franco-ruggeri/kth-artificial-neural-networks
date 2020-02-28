@@ -166,8 +166,6 @@ class RestrictedBoltzmannMachine:
 
             p_v_labels = softmax(support[:, -self.n_labels:])
             v_labels = sample_categorical(p_v_labels)
-            print(v_labels.shape)
-            print(p_v_labels.shape)
 
             p_v_data = sigmoid(support[:, :-self.n_labels])
             v_data = sample_binary(p_v_data)
@@ -304,7 +302,7 @@ class RestrictedBoltzmannMachine:
         return 1./n_patterns * np.linalg.norm(visible_data - reconstructions)
 
     def _get_minibatches(self, training_set):
-        """Splits the training set in mini-batches."""
+        """Split the training set in mini-batches."""
         n_patterns = len(training_set)
         n_batches = int(np.ceil(float(n_patterns) / self.batch_size))
         batches = []
