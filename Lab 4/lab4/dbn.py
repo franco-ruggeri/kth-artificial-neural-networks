@@ -1,22 +1,20 @@
 from util import *
 from rbm import RestrictedBoltzmannMachine
 
-class DeepBeliefNet():    
-
-    ''' 
+class DeepBeliefNet():
+    """
     For more details : Hinton, Osindero, Teh (2006). A fast learning algorithm for deep belief nets. https://www.cs.toronto.edu/~hinton/absps/fastnc.pdf
 
     network          : [top] <---> [pen] ---> [hid] ---> [vis] 
-                               `-> [lbl] 
+                               <-> [lbl]
     lbl : label
     top : top
     pen : penultimate
     hid : hidden
     vis : visible
-    '''
+    """
     
     def __init__(self, sizes, image_size, n_labels, batch_size):
-
         """
         Args:
           sizes: Dictionary of layer names and dimensions
@@ -24,33 +22,20 @@ class DeepBeliefNet():
           n_labels: Number of label categories
           batch_size: Size of mini-batch
         """
-
         self.rbm_stack = {
-            
-            'vis--hid' : RestrictedBoltzmannMachine(ndim_visible=sizes["vis"], ndim_hidden=sizes["hid"],
+            'vis--hid': RestrictedBoltzmannMachine(ndim_visible=sizes["vis"], ndim_hidden=sizes["hid"],
                                                     is_bottom=True, image_size=image_size, batch_size=batch_size),
-            
-            'hid--pen' : RestrictedBoltzmannMachine(ndim_visible=sizes["hid"], ndim_hidden=sizes["pen"], batch_size=batch_size),
-            
-            'pen+lbl--top' : RestrictedBoltzmannMachine(ndim_visible=sizes["pen"]+sizes["lbl"], ndim_hidden=sizes["top"],
+            'hid--pen': RestrictedBoltzmannMachine(ndim_visible=sizes["hid"], ndim_hidden=sizes["pen"], batch_size=batch_size),
+            'pen+lbl--top': RestrictedBoltzmannMachine(ndim_visible=sizes["pen"]+sizes["lbl"], ndim_hidden=sizes["top"],
                                                         is_top=True, n_labels=n_labels, batch_size=batch_size)
         }
-        
         self.sizes = sizes
-
         self.image_size = image_size
-
         self.batch_size = batch_size
-        
         self.n_gibbs_recog = 15
-        
         self.n_gibbs_gener = 200
-        
         self.n_gibbs_wakesleep = 5
-
         self.print_period = 2000
-        
-        return
 
     def recognize(self,true_img,true_lbl):
 
@@ -113,21 +98,20 @@ class DeepBeliefNet():
             
         return
 
-    def train_greedylayerwise(self, vis_trainset, lbl_trainset, n_iterations):
-
+    def train_greedylayerwise(self, vis_trainset, lbl_trainset, n_epochs):
         """
-        Greedy layer-wise training by stacking RBMs. This method first tries to load previous saved parameters of the entire RBM stack. 
+        Greedy layer-wise training by stacking RBMs. This method first tries to load previous saved parameters of the
+        entire RBM stack.
         If not found, learns layer-by-layer (which needs to be completed) .
         Notice that once you stack more layers on top of a RBM, the weights are permanently untwined.
 
         Args:
           vis_trainset: visible data shaped (size of training set, size of visible layer)
           lbl_trainset: label data shaped (size of training set, size of label layer)
-          n_iterations: number of iterations of learning (each iteration learns a mini-batch)
+          n_epochs: number of epochs of learning (each epoch learns all mini-batches)
         """
 
-        try :
-
+        try:
             self.loadfromfile_rbm(loc="trained_rbm",name="vis--hid")
             self.rbm_stack["vis--hid"].untwine_weights()            
             
@@ -136,14 +120,14 @@ class DeepBeliefNet():
             
             self.loadfromfile_rbm(loc="trained_rbm",name="pen+lbl--top")        
 
-        except IOError :
+        except IOError:
 
             # [TODO TASK 4.2] use CD-1 to train all RBMs greedily
         
             print ("training vis--hid")
             """ 
             CD-1 training for vis--hid 
-            """            
+            """
             self.savetofile_rbm(loc="trained_rbm",name="vis--hid")
 
             print ("training hid--pen")
