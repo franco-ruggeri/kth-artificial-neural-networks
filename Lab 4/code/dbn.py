@@ -77,8 +77,8 @@ class DeepBeliefNet():
             prob, out=self.rbm_stack[layer].get_h_given_v_dir(out)
         out=np.concatenate((out,lbl), axis=1)
         for _ in range(self.n_gibbs_recog):
-            _, out = self.rbm_stack[layer].get_h_given_v(out)
-            _, out = self.rbm_stack[layer].get_v_given_h(out)
+            _, out = self.rbm_stack["pen+lbl--top"].get_h_given_v(out)
+            _, out = self.rbm_stack["pen+lbl--top"].get_v_given_h(out)
 
         predicted_lbl = out[:,-true_lbl.shape:]
 
@@ -107,9 +107,21 @@ class DeepBeliefNet():
 
         # [TODO TASK 4.2] fix the label in the label layer and run alternating Gibbs sampling in the top RBM. From the top RBM, drive the network \
         # top to the bottom visible layer (replace 'vis' from random to your generated visible layer).
+        #random_input
+        out=np.random.rand(n_sample, self.sizes["vis"])
+        for layer in ["vis--hid", "hid--pen"]:
+            _, out = self.rbm_stack[layer].get_h_given_v_dir(out)
+        out = np.concatenate((out, lbl), axis=1)
 
         for _ in range(self.n_gibbs_gener):
-            vis = np.random.rand(n_sample, self.sizes["vis"])
+            _, out = self.rbm_stack["pen+lbl--top"].get_h_given_v(out)
+            _, out = self.rbm_stack["pen+lbl--top"].get_v_given_h(out)
+            out[:,-true_lbl.shape[1]]=lbl[:,:]
+
+            gen_out=out[:,:-true_lbl.shape[1]]
+            for layer in [ "hid--pen","vis--hid"]:
+                _, gen_out = self.rbm_stack[layer].get_v_given_h_dir(gen_out)
+            vis=gen_out
 
             records.append([ax.imshow(vis.reshape(self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True,
                                       interpolation=None)])
