@@ -18,22 +18,22 @@ for i, n_hidden in enumerate(range(2, 5)):
     perceptron.learn(patterns, targets)
 
     # plot decision boundary
-    # plt.figure(1)
-    # c = plot_decision_boundary_mlp(perceptron, xlim, color=colors[i])
-    # contours.append(c)
-    # labels.append('n_hidden={}'.format(n_hidden))
+    plt.figure(1)
+    c = plot_decision_boundary_mlp(perceptron, xlim, color=colors[i])
+    contours.append(c)
+    labels.append('n_hidden={}'.format(n_hidden))
 
     # plot decision boundary
-    # plt.figure(2)
-    # plot_learning_curve(perceptron, label=labels[-1], style=colors[i])
+    plt.figure(2)
+    plot_learning_curve(perceptron, label=labels[-1], style=colors[i])
 
-# plt.figure(1)
-# plot_data(patterns, targets)
-# artists = [c.legend_elements()[0] for c in contours]
-# plt.legend([a[0] for a in artists], labels, loc='upper right')
-# plt.figure(2)
-# plt.legend()
-# plt.show()
+plt.figure(1)
+plot_data(patterns, targets)
+artists = [c.legend_elements()[0] for c in contours]
+plt.legend([a[0] for a in artists], labels, loc='upper right')
+plt.figure(2)
+plt.legend()
+plt.show()
 
 # train with training set and test with validation set
 colors = ['y', 'm', 'k', 'g']

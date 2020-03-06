@@ -157,10 +157,7 @@ class MLP:
         # extra row for bias term
         patterns = np.concatenate((patterns, np.ones((1, patterns.shape[1]))), axis=0)
 
-        # tip 1 - targets inside the domain of phi
-        targets_ = np.where(targets == 1, 1-self._eps, -1+self._eps)
-
-        # tip 2 - smart initial weights (uniform distribution with zero-mean and variance N => U(-sqrt(3*N), sqrt(3*N)))
+        # tip 1 - smart initial weights (uniform distribution with zero-mean and variance N => U(-sqrt(3*N), sqrt(3*N)))
         low = -np.sqrt(3*patterns.shape[0])
         high = -low
         self.W = np.random.uniform(low, high, size=(self.n_hidden, patterns.shape[0]))
@@ -180,13 +177,13 @@ class MLP:
         self._dV = 0
         for i in range(self.n_epochs):
             if self.batch:
-                self._backprop(patterns, targets_)
+                self._backprop(patterns, targets)
             else:
-                # tip 3 - shuffle at each epoch (improve stochastic behavior)
+                # tip 2 - shuffle at each epoch (improve stochastic behavior)
                 idx = np.arange(patterns.shape[1])
                 np.random.shuffle(idx)
                 patterns_ = patterns[:, idx]
-                targets_ = targets_[:, idx]
+                targets_ = targets[:, idx]
 
                 for n in range(patterns_.shape[1]):
                     pattern = patterns_[:, n].reshape(-1, 1)
@@ -245,5 +242,3 @@ class MLP:
     def _derivative_activate(self, phi_x):
         """Compute derivative of activation of neurons, given the activation (necessary for backward pass)."""
         return (1 + phi_x) * (1 - phi_x) / 2
-
-    _eps = 0.1  # margin for the targets with respect to the limiting values of the activation function
