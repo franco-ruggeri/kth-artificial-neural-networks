@@ -118,17 +118,18 @@ def plot_decision_boundary_mlp(perceptron, xlim, color=None):
     return c
 
 
-def plot_learning_curve(perceptron, style='', label=''):
-    if isinstance(perceptron, MLP) and perceptron.mce_val is not None:
-        plt.plot(perceptron.mce_val, style, label=label+' validation')
-        label += ' training'
-    plt.plot(perceptron.mce, style, label=label)
-    plt.xlabel('epoch')
-    plt.ylabel('misclassification error')
-    if perceptron.n_epochs > 1000:
-        step = 1000
-    elif perceptron.n_epochs > 100:
-        step = 20
+def plot_learning_curve(perceptron, measure='mce', style='', label=''):
+    if measure == 'mce':
+        if isinstance(perceptron, MLP) and perceptron.mce_val is not None:
+            plt.plot(perceptron.mce_val, style, label=label+' validation')
+            label += ' training'
+        plt.plot(perceptron.mce, style, label=label)
+        plt.ylabel('misclassification error')
+    elif measure == 'mse':
+        plt.plot(perceptron.mse, style, label=label)
+        plt.ylabel('MSE')
     else:
-        step = 5
-    plt.xticks(np.arange(0, perceptron.n_epochs+1, step))
+        raise ValueError('Invalid measure.')
+
+    plt.xlabel('epoch')
+    plt.xticks(np.arange(0, perceptron.n_epochs+1, round(perceptron.n_epochs/10)))

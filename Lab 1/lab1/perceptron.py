@@ -81,12 +81,12 @@ class SLP:
                         e = targets[:, n] - self.predict(pattern)
                     self.weights += self.learning_rate * e @ pattern.T
 
+            # stats
+            self.mce.append(1 - self.score(patterns, targets))
+
             # animation of decision boundary
             if self.animation:
                 self.weights_history.append(self.weights.copy())
-
-            # stats
-            self.mce.append(1 - self.score(patterns, targets))
 
     def predict(self, patterns):
         """Predict targets."""
@@ -128,17 +128,21 @@ class MLP:
     Mode: batch.
     """
 
-    def __init__(self, learning_rate, n_epochs, n_hidden, mode, alpha=0.9, seed=None):
+    def __init__(self, learning_rate, n_epochs, n_hidden, mode, alpha=0.9, animation=False, seed=None):
         self.learning_rate = learning_rate
         self.n_epochs = n_epochs
         self.n_hidden = n_hidden            # number of neurons in the hidden layer
         self.alpha = alpha                  # factor for momentum term
         self.W = None                       # weights first layer
         self.V = None                       # weights second layer
-        self._dW = None                      # previous update for W, used for momentum
-        self._dV = None                      # previous update for V, used for momentum
+        self._dW = None                     # previous update for W, used for momentum
+        self._dV = None                     # previous update for V, used for momentum
+        self.animation = animation          # animation of function/decision boundary (i.e. save history of weights)
+        self.W_history = []
+        self.W_history = []
         self.mce = None                     # misclassification error on the training set
         self.mce_val = None                 # misclassification error on the validation set
+        self.mse = None                     # mean-squared error
         self.seed = seed
 
         # select mode
@@ -172,6 +176,7 @@ class MLP:
             self.mce_val = [1 - self.score(val_patterns, val_targets)]
         else:
             validate = False
+        self.mse = [self._compute_mse(patterns, targets)]
 
         self._dW = 0
         self._dV = 0
@@ -194,6 +199,12 @@ class MLP:
             self.mce.append(1 - self.score(patterns, targets))
             if validate:
                 self.mce_val.append(1 - self.score(val_patterns, val_targets))
+            self.mse.append(self._compute_mse(patterns, targets))
+
+            # animation of function/decision boundary
+            if self.animation:
+                self.W_history.append(self.W.copy())
+                self.V_history.append(self.V.copy())
 
     def predict(self, patterns, thresholded=True):
         """Predict targets."""
@@ -206,11 +217,17 @@ class MLP:
         return O
 
     def score(self, patterns, targets):
-        """Compute accuracy."""
+        """
+        Compute accuracy.
+
+        Measure in classification: misclassification error.
+        Measure in regression: mean-squared error.
+        """
         y = self.predict(patterns)
         correct = np.all(np.equal(y, targets), axis=0)
         n_correct = len(np.where(correct)[0])
-        return n_correct / patterns.shape[1]
+        score = n_correct / patterns.shape[1]
+        return score
 
     def _forward(self, patterns):
         """Forward pass of BackProp."""
@@ -242,3 +259,6 @@ class MLP:
     def _derivative_activate(self, phi_x):
         """Compute derivative of activation of neurons, given the activation (necessary for backward pass)."""
         return (1 + phi_x) * (1 - phi_x) / 2
+
+    def _compute_mse(self, patterns, targets):
+        return np.mean((targets - self.predict(patterns, thresholded=False)) ** 2, axis=1)
