@@ -28,7 +28,7 @@ def shuffle_data(patterns, targets, seed=None):
     return patterns[:, idx], targets[:, idx]
 
 
-def subsample_data(patterns, targets, percentages, seed=None):
+def subsample_linearly_non_separable_data(patterns, targets, percentages, seed=None):
     """
     Subsample data.
 
@@ -126,6 +126,9 @@ def plot_learning_curve(perceptron, measure='mce', style='', label=''):
         plt.plot(perceptron.mce, style, label=label)
         plt.ylabel('misclassification error')
     elif measure == 'mse':
+        if isinstance(perceptron, MLP) and perceptron.mse_val is not None:
+            plt.plot(perceptron.mse_val, style, label=label+' validation')
+            label += ' training'
         plt.plot(perceptron.mse, style, label=label)
         plt.ylabel('MSE')
     else:

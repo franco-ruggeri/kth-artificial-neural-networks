@@ -40,7 +40,7 @@ for scenario, percentages in enumerate([(.75, .75, .75), (.5, .5, 1), (1, 1, .5)
 
     for n in range(N):
         # subsample
-        train_p, train_t, test_p, test_t = subsample_data(patterns, targets, percentages, seed=seed+n)
+        train_p, train_t, test_p, test_t = subsample_linearly_non_separable_data(patterns, targets, percentages, seed=seed + n)
 
         # train
         perceptron = SLP(learning_rate=0.001, n_epochs=500, rule='delta', mode='batch', seed=seed + n)

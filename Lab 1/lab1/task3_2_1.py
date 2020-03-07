@@ -47,10 +47,10 @@ contours = []
 labels = []
 for scenario, percentages in enumerate([(.75, .75, .75), (.5, .5, 1), (1, 1, .5), (.8, .2, 1)]):
     # subsample
-    train_p, train_t, val_p, val_t = subsample_data(patterns, targets, percentages)
+    train_p, train_t, val_p, val_t = subsample_linearly_non_separable_data(patterns, targets, percentages)
 
     # train
-    perceptron = MLP(learning_rate=0.1, n_epochs=10000, n_hidden=4, mode='batch', seed=seed)
+    perceptron = MLP(learning_rate=0.1, n_epochs=1000, n_hidden=2, mode='batch', seed=seed)
     perceptron.learn(train_p, train_t, val_p, val_t)
 
     # plot decision boundary

@@ -142,7 +142,8 @@ class MLP:
         self.V_history = None
         self.mce = None                     # misclassification error on the training set
         self.mce_val = None                 # misclassification error on the validation set
-        self.mse = None                     # mean-squared error
+        self.mse = None                     # mean-squared error on the training set
+        self.mse_val = None                 # mean-squared error on the validation set
         self.seed = seed
 
         # select mode
@@ -171,12 +172,13 @@ class MLP:
 
         # stats
         self.mce = [1 - self.score(patterns, targets)]
+        self.mse = [self.compute_mse(patterns, targets)]
         if val_patterns is not None and val_targets is not None:
             validate = True
             self.mce_val = [1 - self.score(val_patterns, val_targets)]
+            self.mse_val = [self.compute_mse(val_patterns, val_targets)]
         else:
             validate = False
-        self.mse = [self._compute_mse(patterns, targets)]
 
         # animation of function/decision boundary
         if self.animation:
@@ -202,9 +204,10 @@ class MLP:
 
             # stats
             self.mce.append(1 - self.score(patterns, targets))
+            self.mse.append(self.compute_mse(patterns, targets))
             if validate:
                 self.mce_val.append(1 - self.score(val_patterns, val_targets))
-            self.mse.append(self._compute_mse(patterns, targets))
+                self.mse_val.append(self.compute_mse(val_patterns, val_targets))
 
             # animation of function/decision boundary
             if self.animation:
@@ -222,12 +225,7 @@ class MLP:
         return O
 
     def score(self, patterns, targets):
-        """
-        Compute accuracy.
-
-        Measure in classification: misclassification error.
-        Measure in regression: mean-squared error.
-        """
+        """Compute accuracy (classification ratio)."""
         y = self.predict(patterns)
         correct = np.all(np.equal(y, targets), axis=0)
         n_correct = len(np.where(correct)[0])
@@ -265,5 +263,6 @@ class MLP:
         """Compute derivative of activation of neurons, given the activation (necessary for backward pass)."""
         return (1 + phi_x) * (1 - phi_x) / 2
 
-    def _compute_mse(self, patterns, targets):
-        return np.mean((targets - self.predict(patterns, thresholded=False)) ** 2, axis=1)
+    def compute_mse(self, patterns, targets):
+        """Compute mean-squared error."""
+        return np.mean((targets - self.predict(patterns, thresholded=False)) ** 2)
