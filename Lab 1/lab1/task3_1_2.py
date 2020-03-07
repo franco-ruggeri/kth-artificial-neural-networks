@@ -96,4 +96,4 @@ plt.legend()
 plt.show()
 
 # run from shell for this, it does not work in PyCharm
-# make_animation_decision_boundary(patterns, targets, xlim, p1)
+make_animation_decision_boundary(patterns, targets, xlim, p1)

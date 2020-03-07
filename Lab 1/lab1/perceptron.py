@@ -17,7 +17,7 @@ class SLP:
         self.seed = seed
         self._init_weights = init_weights
         self.animation = animation          # animation of decision boundary
-        self.weights_history = []           # save history of weighs to realize animation of decision boundary
+        self.weights_history = None         # save history of weighs to realize animation of decision boundary
         self.mce = None                     # misclassification error
 
         # select learning rule
@@ -59,7 +59,7 @@ class SLP:
 
         # animation of decision boundary
         if self.animation:
-            self.weights_history.append(self.weights.copy())
+            self.weights_history = [self.weights.copy()]
 
         # stats
         self.mce = [1 - self.score(patterns, targets)]
@@ -138,8 +138,8 @@ class MLP:
         self._dW = None                     # previous update for W, used for momentum
         self._dV = None                     # previous update for V, used for momentum
         self.animation = animation          # animation of function/decision boundary (i.e. save history of weights)
-        self.W_history = []
-        self.W_history = []
+        self.W_history = None
+        self.V_history = None
         self.mce = None                     # misclassification error on the training set
         self.mce_val = None                 # misclassification error on the validation set
         self.mse = None                     # mean-squared error
@@ -177,6 +177,11 @@ class MLP:
         else:
             validate = False
         self.mse = [self._compute_mse(patterns, targets)]
+
+        # animation of function/decision boundary
+        if self.animation:
+            self.W_history = [self.W.copy()]
+            self.V_history = [self.V.copy()]
 
         self._dW = 0
         self._dV = 0
