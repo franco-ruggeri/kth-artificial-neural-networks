@@ -8,7 +8,10 @@ plt.close('all')
 patterns, targets = generate_linearly_non_separable_data(N=100, mu=[[1, .3], [0, -.1]], sigma=[.2, .3], seed=seed)
 xlim = (min(patterns[0, :])-.2, max(patterns[0, :])+.2, min(patterns[1, :])-.2, max(patterns[1, :]+.2))
 
-# train with all data
+
+#######################
+# Train with all data #
+#######################
 colors = ['y', 'm', 'k']
 contours = []
 labels = []
@@ -35,7 +38,10 @@ for i, n_hidden in enumerate(range(2, 5)):
 # plt.legend()
 # plt.show()
 
-# train with training set and test with validation set
+
+###############################
+# Training and validation set #
+###############################
 colors = ['y', 'm', 'k', 'g']
 contours = []
 labels = []
