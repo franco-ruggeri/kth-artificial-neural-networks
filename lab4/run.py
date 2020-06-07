@@ -33,7 +33,7 @@ if __name__ == "__main__":
     plot_images(images=train_imgs[:16], image_size=image_size, grid=(4, 4), filename='train_images.jpg')
 
     """ Restricted Boltzmann Machine """
-    print('Starting a Restricted Boltzmann Machine...')
+    print('Starting a Restricted Boltzmann Machine...\n')
 
     batch_size = 20
     n_epochs = 10
@@ -77,14 +77,14 @@ if __name__ == "__main__":
     """ Deep Belief Net """
     print('Starting a Deep Belief Net...\n')
 
+    batch_size = 20
     dbn = DeepBeliefNet(
         sizes={"vis": image_size[0]*image_size[1], "hid": 500, "pen": 500, "top": 2000, "lbl": n_labels},
         image_size=image_size,
-        batch_size=10
+        batch_size=batch_size
     )
 
     # pre-train
-    batch_size = 20
     n_epochs = 10
     n_iterations = n_epochs * int(train_imgs.shape[0] / batch_size)
     dbn.train_greedylayerwise(vis_trainset=train_imgs, lbl_trainset=train_lbls, n_iterations=n_iterations)
@@ -97,7 +97,6 @@ if __name__ == "__main__":
     test_generative_mode(dbn, n_labels, 10, 'pretrained')
 
     # fine-tune
-    batch_size = 20
     n_epochs = 10
     n_iterations = n_epochs * int(train_imgs.shape[0] / batch_size)
     dbn.train_wakesleep_finetune(vis_trainset=train_imgs, lbl_trainset=train_lbls, n_iterations=n_iterations)

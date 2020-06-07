@@ -125,7 +125,6 @@ class DeepBeliefNet:
           lbl_trainset: label data shaped (size of training set, size of label layer)
           n_iterations: number of iterations of learning (each iteration learns a mini-batch)
         """
-
         try:
             self.loadfromfile_rbm(loc='trained_rbm', name='vis--hid')
             self.rbm_stack['vis--hid'].untwine_weights()
@@ -172,51 +171,79 @@ class DeepBeliefNet:
             self.savetofile_rbm(loc='trained_rbm', name='pen+lbl--top')
 
     def train_wakesleep_finetune(self, vis_trainset, lbl_trainset, n_iterations):
-
         """
         Wake-sleep method for learning all the parameters of network. 
         First tries to load previous saved parameters of the entire network.
+
+        See appendix B of Hinton et al.'s paper.
 
         Args:
           vis_trainset: visible data shaped (size of training set, size of visible layer)
           lbl_trainset: label data shaped (size of training set, size of label layer)
           n_iterations: number of iterations of learning (each iteration learns a mini-batch)
         """
-        
-        print ("\ntraining wake-sleep..")
+        print('\ntraining wake-sleep..')
 
-        try :
-            
-            self.loadfromfile_dbn(loc="trained_dbn",name="vis--hid")
-            self.loadfromfile_dbn(loc="trained_dbn",name="hid--pen")
-            self.loadfromfile_rbm(loc="trained_dbn",name="pen+lbl--top")
-            
-        except IOError :            
+        try:
+            self.loadfromfile_dbn(loc='trained_dbn', name='vis--hid')
+            self.loadfromfile_dbn(loc='trained_dbn', name='hid--pen')
+            self.loadfromfile_rbm(loc='trained_dbn', name='pen+lbl--top')
+        except IOError:
+            n_samples = vis_trainset.shape[0]
 
-            self.n_samples = vis_trainset.shape[0]
+            for it in range(n_iterations):
+                # [TODO TASK 4.3] wake-phase: drive the network bottom to top fixing the visible and label data.
+                # drive bottom to top (recognition weights)
+                wake_hid_p, wake_hid = self.rbm_stack['vis--hid'].get_h_given_v_dir(vis_trainset)
+                wake_pen_p, wake_pen = self.rbm_stack['hid--pen'].get_h_given_v_dir(wake_hid)
 
-            for it in range(n_iterations):            
-                                                
-                # [TODO TASK 4.3] wake-phase : drive the network bottom to top using fixing the visible and label data.
+                # positive phase CDk on top RBM
+                pos_pen_p = np.concatenate((wake_pen_p, lbl_trainset), axis=1)  # labels (on the right!)
+                pos_pen = np.concatenate((wake_pen, lbl_trainset), axis=1)
+                pos_top_p, pos_top = self.rbm_stack['pen+lbl--top'].get_h_given_v(pos_pen)
 
-                # [TODO TASK 4.3] alternating Gibbs sampling in the top RBM for k='n_gibbs_wakesleep' steps, also store neccessary information for learning this RBM.
+                # [TODO TASK 4.3] alternating Gibbs sampling in the top RBM for k='n_gibbs_wakesleep' steps, also store necessary information for learning this RBM.
+                # negative phase CDk on top RBM
+                neg_top = pos_top      # init loop
+                for i in range(self.n_gibbs_wakesleep):
+                    neg_pen_p, neg_pen = self.rbm_stack['pen+lbl--top'].get_v_given_h(neg_top)
 
-                # [TODO TASK 4.3] sleep phase : from the activities in the top RBM, drive the network top to bottom.
+                    # binary samples for representations, probabilities for labels (softmax)
+                    neg_pen = np.concatenate((neg_pen[:, :-self.n_labels], neg_pen_p[:, -self.n_labels:]), axis=1)
 
-                # [TODO TASK 4.3] compute predictions : compute generative predictions from wake-phase activations, and recognize predictions from sleep-phase activations.
-                # Note that these predictions will not alter the network activations, we use them only to learn the directed connections.
-                
-                # [TODO TASK 4.3] update generative parameters : here you will only use 'update_generate_params' method from rbm class.
+                    neg_top_p, neg_top = self.rbm_stack['pen+lbl--top'].get_h_given_v(neg_pen)
 
-                # [TODO TASK 4.3] update parameters of top rbm : here you will only use 'update_params' method from rbm class.
+                # [TODO TASK 4.3] sleep phase: from the activities in the top RBM, drive the network top to bottom.
+                sleep_pen = neg_pen[:, :-self.n_labels]     # throw away label units
+                sleep_hid_p, sleep_hid = self.rbm_stack['hid--pen'].get_v_given_h_dir(sleep_pen)
+                sleep_vis_p, sleep_vis = self.rbm_stack['vis--hid'].get_v_given_h_dir(sleep_hid)
 
-                # [TODO TASK 4.3] update generative parameters : here you will only use 'update_recognize_params' method from rbm class.
+                # [TODO TASK 4.3] compute predictions: compute generative predictions from wake-phase activations, and recognize predictions from sleep-phase activations.
+                # predictions during wake phase (for generative weights)
+                pred_wake_vis = self.rbm_stack['vis--hid'].get_v_given_h_dir(wake_hid)[0]
+                pred_wake_hid = self.rbm_stack['hid--pen'].get_v_given_h_dir(wake_pen)[0]
 
-                if it % self.print_period == 0 : print ("iteration=%7d"%it)
-                        
-            self.savetofile_dbn(loc="trained_dbn",name="vis--hid")
-            self.savetofile_dbn(loc="trained_dbn",name="hid--pen")
-            self.savetofile_rbm(loc="trained_dbn",name="pen+lbl--top")
+                # predictions during sleep phase (for recognition weights)
+                pred_sleep_pen = self.rbm_stack['hid--pen'].get_h_given_v_dir(sleep_hid)[0]
+                pred_sleep_hid = self.rbm_stack['vis--hid'].get_h_given_v_dir(sleep_vis_p)[0]
+
+                # [TODO TASK 4.3] update generative parameters: here you will only use 'update_generate_params' method from rbm class.
+                self.rbm_stack['vis--hid'].update_generate_params(inps=wake_hid, trgs=vis_trainset, preds=pred_wake_vis)
+                self.rbm_stack['hid--pen'].update_generate_params(inps=wake_pen, trgs=wake_hid, preds=pred_wake_hid)
+
+                # [TODO TASK 4.3] update parameters of top rbm: here you will only use 'update_params' method from rbm class.
+                self.rbm_stack['pen+lbl--top'].update_params(v_0=pos_pen, h_0=pos_top, v_k=neg_pen, h_k=neg_top)
+
+                # [TODO TASK 4.3] update generative parameters: here you will only use 'update_recognize_params' method from rbm class.
+                self.rbm_stack['hid--pen'].update_recognize_params(inps=sleep_hid, trgs=sleep_pen, preds=pred_sleep_pen)
+                self.rbm_stack['vis--hid'].update_recognize_params(inps=sleep_vis_p, trgs=sleep_hid, preds=pred_sleep_hid)
+
+                if it % self.print_period == 0:
+                    print("iteration=%07d training accuracy=%4.4f" % (it, self.recognize(vis_trainset, lbl_trainset)))
+
+            self.savetofile_dbn(loc="trained_dbn", name="vis--hid")
+            self.savetofile_dbn(loc="trained_dbn", name="hid--pen")
+            self.savetofile_rbm(loc="trained_dbn", name="pen+lbl--top")
 
     def loadfromfile_rbm(self, loc, name):
         self.rbm_stack[name].weight_vh = np.load("%s/rbm.%s.weight_vh.npy" % (loc, name))

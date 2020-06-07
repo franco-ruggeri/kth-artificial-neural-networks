@@ -129,7 +129,7 @@ class RestrictedBoltzmannMachine:
         self.delta_weight_vh = self.learning_rate/n_samples * (positive-negative) + self.momentum*self.delta_weight_vh
         self.delta_bias_v = self.learning_rate/n_samples * (positive_vb-negative_vb) + self.momentum*self.delta_bias_v
         self.delta_bias_h = self.learning_rate/n_samples * (positive_hb-negative_hb) + self.momentum*self.delta_bias_h
-        
+
         self.bias_v += self.delta_bias_v
         self.weight_vh += self.delta_weight_vh
         self.bias_h += self.delta_bias_h
@@ -147,7 +147,7 @@ class RestrictedBoltzmannMachine:
         """
         assert self.weight_vh is not None
 
-        # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of hidden layer (replace the zeros below) 
+        # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of hidden layer (replace the zeros below)
         p_h = sigmoid(self.bias_h + visible_minibatch @ self.weight_vh)
         h = sample_binary(p_h)
         return p_h, h
@@ -163,7 +163,6 @@ class RestrictedBoltzmannMachine:
            tuple ( p(v|h) , v) 
            both are shaped (size of mini-batch, size of visible layer)
         """
-        
         assert self.weight_vh is not None
 
         if self.is_top:
@@ -186,12 +185,11 @@ class RestrictedBoltzmannMachine:
 
             p_v = np.concatenate((p_v_data, p_v_labels), axis=1)
             v = np.concatenate((v_data, v_labels), axis=1)
-
         else:
             # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of visible layer (replace the pass and zeros below)
             p_v = sigmoid(self.bias_v + hidden_minibatch @ self.weight_vh.T)
             v = sample_binary(p_v)
-        
+
         return p_v, v
 
     """ RBM as a belief layer: the functions below do not have to be changed until running a DBN """
@@ -200,6 +198,8 @@ class RestrictedBoltzmannMachine:
         self.weight_v_to_h = np.copy(self.weight_vh)
         self.weight_h_to_v = np.copy(np.transpose(self.weight_vh))
         self.weight_vh = None
+        self.delta_bias_v = 0
+        self.delta_bias_h = 0
 
     def get_h_given_v_dir(self, visible_minibatch):
         """Compute probabilities p(h|v) and activations h ~ p(h|v)
@@ -212,10 +212,9 @@ class RestrictedBoltzmannMachine:
            tuple ( p(h|v) , h) 
            both are shaped (size of mini-batch, size of hidden layer)
         """
-        
         assert self.weight_v_to_h is not None
 
-        # [TODO TASK 4.2] perform same computation as the function 'get_h_given_v' but with directed connections (replace the zeros below) 
+        # [TODO TASK 4.2] perform same computation as the function 'get_h_given_v' but with directed connections (replace the zeros below)
         p_h = sigmoid(self.bias_h + visible_minibatch @ self.weight_v_to_h)
         h = sample_binary(p_h)
         return p_h, h
@@ -232,27 +231,26 @@ class RestrictedBoltzmannMachine:
            both are shaped (size of mini-batch, size of visible layer)
         """
         assert self.weight_h_to_v is not None
-        
+
         if self.is_top:
             """Here visible layer has both data and labels. Compute total input for each unit (identical for both 
             cases), and split into two parts, something like support[:, :-self.n_labels] and support[:, 
             -self.n_labels:]. Then, for both parts, use the appropriate activation function to get probabilities and 
             a sampling method to get activities. The probabilities as well as activities can then be concatenated 
             back into a normal visible layer. """
-            
+
             # [TODO TASK 4.2] Note that even though this function performs same computation as 'get_v_given_h' but
             #  with directed connections, this case should never be executed : when the RBM is a part of a DBN and is
             #  at the top, it will not have directed connections. Appropriate code here is to raise an error (replace
             #  pass below)
             raise RuntimeError('Directed connections used in the top RBM.')
-            
         else:
-            # [TODO TASK 4.2] performs same computaton as the function 'get_v_given_h' but with directed connections (replace the pass and zeros below)             
+            # [TODO TASK 4.2] performs same computaton as the function 'get_v_given_h' but with directed connections (replace the pass and zeros below)
             p_v = sigmoid(self.bias_v + hidden_minibatch @ self.weight_h_to_v)
             v = sample_binary(p_v)
 
         return p_v, v
-        
+
     def update_generate_params(self, inps, trgs, preds):
         """Update generative weight "weight_h_to_v" and bias "bias_v"
         
@@ -262,17 +260,16 @@ class RestrictedBoltzmannMachine:
            preds: activities or probabilities of output unit (prediction)
            all args have shape (size of mini-batch, size of respective layer)
         """
-
         # [TODO TASK 4.3] find the gradients from the arguments (replace the 0s below) and update the weight and bias parameters.
-        
-        self.delta_weight_h_to_v += 0
-        self.delta_bias_v += 0
-        
+        n_samples = inps.shape[0]
+
+        self.delta_weight_h_to_v = self.learning_rate / n_samples * inps.T * (trgs - preds) + self.momentum * self.delta_weight_h_to_v
+        self.delta_bias_v = self.learning_rate / n_samples * np.sum(trgs - preds, axis=0) + self.momentum * self.delta_bias_v
+
         self.weight_h_to_v += self.delta_weight_h_to_v
         self.bias_v += self.delta_bias_v
-    
-    def update_recognize_params(self,inps,trgs,preds):
-        
+
+    def update_recognize_params(self, inps, trgs, preds):
         """Update recognition weight "weight_v_to_h" and bias "bias_h"
         
         Args:
@@ -281,11 +278,11 @@ class RestrictedBoltzmannMachine:
            preds: activities or probabilities of output unit (prediction)
            all args have shape (size of mini-batch, size of respective layer)
         """
-
         # [TODO TASK 4.3] find the gradients from the arguments (replace the 0s below) and update the weight and bias parameters.
+        n_samples = inps.shape[0]
 
-        self.delta_weight_v_to_h += 0
-        self.delta_bias_h += 0
+        self.delta_weight_v_to_h = self.learning_rate / n_samples * inps.T * (trgs - preds) + self.momentum * self.delta_weight_v_to_h
+        self.delta_bias_h += self.learning_rate/n_samples*np.sum(trgs - preds, axis=0) + self.momentum*self.delta_bias_h
 
         self.weight_v_to_h += self.delta_weight_v_to_h
         self.bias_h += self.delta_bias_h
