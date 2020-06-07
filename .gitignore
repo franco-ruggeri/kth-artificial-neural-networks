@@ -1,4 +1,6 @@
-# byte-compiled
+lab*/__pycache__/
+lab*/figures/
+
 Lab\ 1/lab1/__pycache__/
 Lab\ 2/lab2/__pycache__/
 Lab\ 3/lab3/__pycache__/

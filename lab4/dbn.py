@@ -129,7 +129,7 @@ class DeepBeliefNet:
             
             self.loadfromfile_rbm(loc='trained_rbm', name='hid--pen')
             self.rbm_stack['hid--pen'].untwine_weights()
-            
+
             self.loadfromfile_rbm(loc='trained_rbm', name='pen+lbl--top')
         except IOError:
 
@@ -152,7 +152,7 @@ class DeepBeliefNet:
             CD-1 training for hid--pen 
             """
             print('\ntraining hid--pen')
-            vis = self.rbm_stack['vis--hid'].get_h_given_v_dir(vis_trainset)[0]     # probabilities
+            vis = self.rbm_stack['vis--hid'].get_h_given_v_dir(vis)[0]      # probabilities
             self.rbm_stack['hid--pen'].cd1(visible_trainset=vis, n_iterations=n_iterations)
             self.savetofile_rbm(loc='trained_rbm', name='hid--pen')
             self.rbm_stack['hid--pen'].untwine_weights()
@@ -163,8 +163,8 @@ class DeepBeliefNet:
             CD-1 training for pen+lbl--top 
             """
             print('\ntraining pen+lbl--top')
-            vis = self.rbm_stack['hid--pen'].get_h_given_v_dir(vis_trainset)[0]     # probabilities
-            vis = np.concatenate((vis, lbl_trainset), axis=1)                       # add labels (on the right!)
+            vis = self.rbm_stack['hid--pen'].get_h_given_v_dir(vis)[0]      # probabilities
+            vis = np.concatenate((vis, lbl_trainset), axis=1)               # add labels (on the right!)
             self.rbm_stack['pen+lbl--top'].cd1(visible_trainset=vis, n_iterations=n_iterations)
             self.savetofile_rbm(loc='trained_rbm', name='pen+lbl--top')
 
