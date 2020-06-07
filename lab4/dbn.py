@@ -105,6 +105,9 @@ class DeepBeliefNet:
             aux = self.rbm_stack["pen+lbl--top"].reconstruct(vis, sample_v1=True)   # binary samples
             vis[:, :-self.n_labels] = aux[:, :-self.n_labels]       # labels are clamped for all iterations
 
+        # throw away labels units
+        vis = vis[:, :-self.n_labels]
+
         # single-run sampling top to bottom
         vis = self.rbm_stack["hid--pen"].get_v_given_h_dir(vis)[1]  # binary samples
         vis = self.rbm_stack["vis--hid"].get_v_given_h_dir(vis)[0]  # probabilities (images, avoid further noise)
