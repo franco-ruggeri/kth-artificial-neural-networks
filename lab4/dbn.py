@@ -136,7 +136,6 @@ class DeepBeliefNet:
         except IOError:
 
             # [TODO TASK 4.2] use CD-1 to train all RBMs greedily
-
             f, ax = plt.subplots()
 
             """
@@ -190,21 +189,27 @@ class DeepBeliefNet:
             self.loadfromfile_rbm(loc='trained_dbn', name='pen+lbl--top')
         except IOError:
             n_samples = vis_trainset.shape[0]
+            n_batches = int(n_samples / self.batch_size)
 
             for it in range(n_iterations):
+                # select batch
+                batch = it % n_batches
+                batch_vis = vis_trainset[batch * self.batch_size:(batch + 1) * self.batch_size]
+                batch_lbl = lbl_trainset[batch * self.batch_size:(batch + 1) * self.batch_size]
+
                 # [TODO TASK 4.3] wake-phase: drive the network bottom to top fixing the visible and label data.
                 # drive bottom to top (recognition weights)
-                wake_hid_p, wake_hid = self.rbm_stack['vis--hid'].get_h_given_v_dir(vis_trainset)
+                wake_hid_p, wake_hid = self.rbm_stack['vis--hid'].get_h_given_v_dir(batch_vis)
                 wake_pen_p, wake_pen = self.rbm_stack['hid--pen'].get_h_given_v_dir(wake_hid)
 
                 # positive phase CDk on top RBM
-                pos_pen_p = np.concatenate((wake_pen_p, lbl_trainset), axis=1)  # labels (on the right!)
-                pos_pen = np.concatenate((wake_pen, lbl_trainset), axis=1)
+                pos_pen = np.concatenate((wake_pen, batch_lbl), axis=1)
                 pos_top_p, pos_top = self.rbm_stack['pen+lbl--top'].get_h_given_v(pos_pen)
 
                 # [TODO TASK 4.3] alternating Gibbs sampling in the top RBM for k='n_gibbs_wakesleep' steps, also store necessary information for learning this RBM.
                 # negative phase CDk on top RBM
                 neg_top = pos_top      # init loop
+                neg_pen = None
                 for i in range(self.n_gibbs_wakesleep):
                     neg_pen_p, neg_pen = self.rbm_stack['pen+lbl--top'].get_v_given_h(neg_top)
 
@@ -228,7 +233,7 @@ class DeepBeliefNet:
                 pred_sleep_hid = self.rbm_stack['vis--hid'].get_h_given_v_dir(sleep_vis_p)[0]
 
                 # [TODO TASK 4.3] update generative parameters: here you will only use 'update_generate_params' method from rbm class.
-                self.rbm_stack['vis--hid'].update_generate_params(inps=wake_hid, trgs=vis_trainset, preds=pred_wake_vis)
+                self.rbm_stack['vis--hid'].update_generate_params(inps=wake_hid, trgs=batch_vis, preds=pred_wake_vis)
                 self.rbm_stack['hid--pen'].update_generate_params(inps=wake_pen, trgs=wake_hid, preds=pred_wake_hid)
 
                 # [TODO TASK 4.3] update parameters of top rbm: here you will only use 'update_params' method from rbm class.
@@ -239,7 +244,7 @@ class DeepBeliefNet:
                 self.rbm_stack['vis--hid'].update_recognize_params(inps=sleep_vis_p, trgs=sleep_hid, preds=pred_sleep_hid)
 
                 if it % self.print_period == 0:
-                    print("iteration=%07d training accuracy=%4.4f" % (it, self.recognize(vis_trainset, lbl_trainset)))
+                    print('iteration=%07d training accuracy=%.2f%%' % (it, 100. * self.recognize(vis_trainset, lbl_trainset)))
 
             self.savetofile_dbn(loc="trained_dbn", name="vis--hid")
             self.savetofile_dbn(loc="trained_dbn", name="hid--pen")

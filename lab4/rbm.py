@@ -75,7 +75,6 @@ class RestrictedBoltzmannMachine:
 
         n_samples = visible_trainset.shape[0]
         n_batches = int(n_samples / self.batch_size)
-        np.random.shuffle(visible_trainset)         # randomize (see section 4.1 of Hinton's paper)
 
         for it in range(n_iterations):
             # [TODO TASK 4.1] run k=1 alternating Gibbs sampling : v_0 -> h_0 ->  v_1 -> h_1.
