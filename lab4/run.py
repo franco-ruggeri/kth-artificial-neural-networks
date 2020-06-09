@@ -7,7 +7,7 @@ def test_generative_mode(dbn, n_labels, n_images, name):
     for digit in range(n_labels):
         # generate
         digit_1hot = np.zeros(shape=(n_images, n_labels))
-        digit_1hot[0, digit] = 1
+        digit_1hot[:, digit] = 1
         gen_imgs = dbn.generate(digit_1hot)
 
         # stitch video
@@ -17,9 +17,9 @@ def test_generative_mode(dbn, n_labels, n_images, name):
         ax.set_yticks([])
         records = []
         for img in gen_imgs:
-            records.append(ax.imshow(img.reshape(image_size), cmap="bwr", vmin=0, vmax=1, animated=True,
-                                     interpolation=None))
-        stitch_video(fig, records, filename='%s.generate%d.mp4'.format(name, digit))
+            records.append([ax.imshow(img.reshape(image_size), cmap="bwr", vmin=0, vmax=1, animated=True,
+                                      interpolation=None)])
+        stitch_video(fig, records, filename='{}.generate{}.mp4'.format(name, digit))
 
 
 if __name__ == "__main__":

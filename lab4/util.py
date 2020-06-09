@@ -121,7 +121,7 @@ def stitch_video(fig, imgs, filename):
     """
     import matplotlib.animation as animation
     
-    anim = animation.ArtistAnimation(fig, imgs, interval=100, blit=True, repeat=False)
+    anim = animation.ArtistAnimation(fig, imgs, interval=1000, blit=True, repeat=False)
     anim.save(os.path.join(figures_dir, filename))
 
 

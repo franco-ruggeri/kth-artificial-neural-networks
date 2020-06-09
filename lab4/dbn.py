@@ -93,9 +93,10 @@ class DeepBeliefNet:
         #  the top RBM, drive the network top to the bottom visible layer (replace 'vis' from random to your
         #  generated visible layer).
 
-        # initialize representations in penultimate layer from bias
-        vis = sample_binary(sigmoid(self.rbm_stack["pen+lbl--top"].bias_v[:-self.n_labels])
-                            * np.ones((n_samples, self.sizes['pen'])))
+        # initialize penultimate layer with up-pass from random image
+        vis = sample_binary(0.5 * np.ones((n_samples, self.sizes['vis'])))
+        vis = self.rbm_stack['vis--hid'].get_h_given_v_dir(vis)[1]
+        vis = self.rbm_stack['hid--pen'].get_h_given_v_dir(vis)[1]
 
         # clamp labels (in the last units, on the right!)
         vis = np.concatenate((vis, lbl), axis=1)
