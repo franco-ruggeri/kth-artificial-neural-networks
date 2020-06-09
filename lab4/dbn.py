@@ -244,7 +244,7 @@ class DeepBeliefNet:
                 self.rbm_stack['vis--hid'].update_recognize_params(inps=sleep_vis_p, trgs=sleep_hid, preds=pred_sleep_hid)
 
                 if it % self.print_period == 0:
-                    print('iteration=%07d training accuracy=%.2f%%' % (it, 100. * self.recognize(vis_trainset, lbl_trainset)))
+                    print('iteration=%07d' % it)
 
             self.savetofile_dbn(loc="trained_dbn", name="vis--hid")
             self.savetofile_dbn(loc="trained_dbn", name="hid--pen")
