@@ -121,7 +121,7 @@ def stitch_video(fig, imgs, filename):
     """
     import matplotlib.animation as animation
     
-    anim = animation.ArtistAnimation(fig, imgs, interval=1000, blit=True, repeat=False)
+    anim = animation.ArtistAnimation(fig, imgs, interval=500, blit=True, repeat=False)
     anim.save(os.path.join(figures_dir, filename))
 
 
@@ -150,6 +150,7 @@ def plot_images(images, image_size, grid, filename):
             ax.imshow(images[idx].reshape(image_size), cmap="bwr", vmin=0, vmax=1, interpolation=None)
             ax.tick_params(axis='both', which='both', bottom=False, left=False, labelbottom=False, labelleft=False)
     plt.savefig(os.path.join(figures_dir, filename))
+    plt.close()
 
 
 def plot_reconstruction_loss(rbm, figure, axes, label, filename):

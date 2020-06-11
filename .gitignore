@@ -1,11 +1,9 @@
 lab*/__pycache__/
 lab*/figures/
+lab4/trained_rbm/
+lab4/trained_dbn/
+
 
 Lab\ 1/lab1/__pycache__/
 Lab\ 2/lab2/__pycache__/
 Lab\ 3/lab3/__pycache__/
-Lab\ 4/lab4/__pycache__/
-Lab\ 4/lab4/*.pyc
-
-Lab\ 4/lab4/trained_rbm/
-Lab\ 4/lab4/trained_dbn/

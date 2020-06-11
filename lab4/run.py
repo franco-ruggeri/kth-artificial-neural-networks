@@ -3,12 +3,14 @@ from rbm import RestrictedBoltzmannMachine
 from dbn import DeepBeliefNet
 
 
-def test_generative_mode(dbn, n_labels, n_images, name):
+def test_generative_mode(dbn, n_labels, n_images, image_size, name):
+    gen_imgs = np.zeros((n_labels, n_images, image_size[0]*image_size[1]))
+
     for digit in range(n_labels):
         # generate
         digit_1hot = np.zeros(shape=(n_images, n_labels))
         digit_1hot[:, digit] = 1
-        gen_imgs = dbn.generate(digit_1hot)
+        gen_imgs[digit] = dbn.generate(digit_1hot)
 
         # stitch video
         fig, ax = plt.subplots(1, 1, figsize=(3, 3))
@@ -16,17 +18,22 @@ def test_generative_mode(dbn, n_labels, n_images, name):
         ax.set_xticks([])
         ax.set_yticks([])
         records = []
-        for img in gen_imgs:
+        for img in gen_imgs[digit]:
             records.append([ax.imshow(img.reshape(image_size), cmap="bwr", vmin=0, vmax=1, animated=True,
                                       interpolation=None)])
         stitch_video(fig, records, filename='{}.generate{}.mp4'.format(name, digit))
+        plt.close('all')
+
+    # plot in figure
+    gen_imgs = gen_imgs.reshape(-1, image_size[0]*image_size[1])
+    plot_images(images=gen_imgs, image_size=image_size, grid=(n_labels, n_images), filename='{}.generate.jpg'.format(name))
 
 
 if __name__ == "__main__":
     np.random.seed(1)
 
     """ Load and examine data """
-    image_size = [28, 28]
+    image_size = (28, 28)
     n_labels = 10
     train_imgs, train_lbls, test_imgs, test_lbls = read_mnist(dim=image_size, n_train=60000, n_test=10000)
     plot_histogram_classes(train_labels=train_lbls, test_labels=test_lbls, n_labels=n_labels)
@@ -72,10 +79,9 @@ if __name__ == "__main__":
                 else:           # odd rows => reconstructions
                     images[i * 4 + j] = reconstructions[idx]
         plot_images(images, image_size=image_size, grid=(4, 4), filename='test_reconstructions_{}'.format(n_hidden))
-    print()
 
     """ Deep Belief Net """
-    print('Starting a Deep Belief Net...\n')
+    print('\nStarting a Deep Belief Net...\n')
 
     batch_size = 20
     dbn = DeepBeliefNet(
@@ -94,7 +100,7 @@ if __name__ == "__main__":
     print('test accuracy = %.2f%%' % (100. * dbn.recognize(test_imgs, test_lbls)))
 
     # generative mode
-    test_generative_mode(dbn, n_labels, 10, 'pretrained')
+    test_generative_mode(dbn, n_labels, 10, image_size, 'pretrained')
 
     # fine-tune
     n_epochs = 10
@@ -106,4 +112,4 @@ if __name__ == "__main__":
     print('test accuracy = %.2f%%' % (100. * dbn.recognize(test_imgs, test_lbls)))
 
     # generative mode
-    test_generative_mode(dbn, n_labels, 10, 'finetuned')
+    test_generative_mode(dbn, n_labels, 10, image_size, 'finetuned')

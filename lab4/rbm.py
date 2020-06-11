@@ -117,17 +117,9 @@ class RestrictedBoltzmannMachine:
            all args have shape (size of mini-batch, size of respective layer)
         """
         # [TODO TASK 4.1] get the gradients from the arguments (replace the 0s below) and update the weight and bias parameters
-        positive = v_0.T @ h_0
-        negative = v_k.T @ h_k
-        positive_vb = v_0.sum(axis=0)
-        negative_vb = v_k.sum(axis=0)
-        positive_hb = h_0.sum(axis=0)
-        negative_hb = h_k.sum(axis=0)
-        n_samples = v_0.shape[0]
-
-        self.delta_weight_vh = self.learning_rate/n_samples * (positive-negative) + self.momentum*self.delta_weight_vh
-        self.delta_bias_v = self.learning_rate/n_samples * (positive_vb-negative_vb) + self.momentum*self.delta_bias_v
-        self.delta_bias_h = self.learning_rate/n_samples * (positive_hb-negative_hb) + self.momentum*self.delta_bias_h
+        self.delta_weight_vh = self.learning_rate * (v_0.T @ h_0 - v_k.T @ h_k)
+        self.delta_bias_v = self.learning_rate * (v_0.sum(axis=0) - v_k.sum(axis=0))
+        self.delta_bias_h = self.learning_rate * (h_0.sum(axis=0) - h_k.sum(axis=0))
 
         self.bias_v += self.delta_bias_v
         self.weight_vh += self.delta_weight_vh
@@ -197,8 +189,6 @@ class RestrictedBoltzmannMachine:
         self.weight_v_to_h = np.copy(self.weight_vh)
         self.weight_h_to_v = np.copy(np.transpose(self.weight_vh))
         self.weight_vh = None
-        self.delta_bias_v = 0
-        self.delta_bias_h = 0
 
     def get_h_given_v_dir(self, visible_minibatch):
         """Compute probabilities p(h|v) and activations h ~ p(h|v)
@@ -260,10 +250,8 @@ class RestrictedBoltzmannMachine:
            all args have shape (size of mini-batch, size of respective layer)
         """
         # [TODO TASK 4.3] find the gradients from the arguments (replace the 0s below) and update the weight and bias parameters.
-        n_samples = inps.shape[0]
-
-        self.delta_weight_h_to_v = self.learning_rate / n_samples * inps.T @ (trgs - preds) + self.momentum * self.delta_weight_h_to_v
-        self.delta_bias_v = self.learning_rate / n_samples * np.sum(trgs - preds, axis=0) + self.momentum * self.delta_bias_v
+        self.delta_weight_h_to_v = self.learning_rate * inps.T @ (trgs - preds)
+        self.delta_bias_v = self.learning_rate * (trgs - preds).sum(axis=0)
 
         self.weight_h_to_v += self.delta_weight_h_to_v
         self.bias_v += self.delta_bias_v
@@ -278,10 +266,8 @@ class RestrictedBoltzmannMachine:
            all args have shape (size of mini-batch, size of respective layer)
         """
         # [TODO TASK 4.3] find the gradients from the arguments (replace the 0s below) and update the weight and bias parameters.
-        n_samples = inps.shape[0]
-
-        self.delta_weight_v_to_h = self.learning_rate / n_samples * inps.T @ (trgs - preds) + self.momentum * self.delta_weight_v_to_h
-        self.delta_bias_h += self.learning_rate / n_samples * np.sum(trgs - preds, axis=0) + self.momentum * self.delta_bias_h
+        self.delta_weight_v_to_h = self.learning_rate * inps.T @ (trgs - preds)
+        self.delta_bias_h += self.learning_rate * (trgs - preds).sum(axis=0)
 
         self.weight_v_to_h += self.delta_weight_v_to_h
         self.bias_h += self.delta_bias_h
