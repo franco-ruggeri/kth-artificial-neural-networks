@@ -160,3 +160,53 @@ def plot_reconstruction_loss(rbm, figure, axes, label, filename):
     axes.legend()
     figure.savefig(os.path.join(figures_dir, filename))
     plt.close(figure)
+
+
+def plot_reconstructions(rbm, images, image_size, filename):
+    images = images[np.random.choice(len(images), replace=False, size=8)]
+    reconstructions = rbm.reconstruct(images)
+    images_plot = np.zeros((16, image_size[0] * image_size[1]))
+    for i in range(4):
+        for j in range(4):
+            idx = (i // 2) * 4 + j
+            if i % 2 == 0:      # even rows => original images
+                images_plot[i * 4 + j] = images[idx]
+            else:               # odd rows => reconstructions
+                images_plot[i * 4 + j] = reconstructions[idx]
+    plot_images(images=images_plot, image_size=image_size, grid=(4, 4), filename=filename)
+
+
+def plot_generated_images(dbn, image_size, n_labels, n_images, name):
+    gen_imgs = np.zeros((n_labels, n_images, image_size[0] * image_size[1]))
+
+    for digit in range(n_labels):
+        # generate
+        digit_1hot = np.zeros(shape=(n_images, n_labels))
+        digit_1hot[:, digit] = 1
+        gen_imgs[digit] = dbn.generate(digit_1hot)
+
+        # stitch video
+        fig, ax = plt.subplots(1, 1, figsize=(3, 3))
+        plt.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        records = []
+        for img in gen_imgs[digit]:
+            records.append([ax.imshow(img.reshape(image_size), cmap="bwr", vmin=0, vmax=1, animated=True,
+                                      interpolation=None)])
+        stitch_video(fig, records, filename='{}.generate{}.mp4'.format(name, digit))
+        plt.close('all')
+
+    # plot in figure
+    gen_imgs = gen_imgs.reshape(-1, image_size[0] * image_size[1])
+    plot_images(images=gen_imgs, image_size=image_size, grid=(n_labels, n_images),
+                filename='{}.generate.jpg'.format(name))
+
+
+def plot_accuracy(dbn, filename):
+    plt.figure()
+    plt.plot(dbn.measured_iterations, dbn.accuracy)
+    plt.xlabel('iteration')
+    plt.ylabel('accuracy')
+    plt.savefig(os.path.join(figures_dir, filename))
+    plt.close()

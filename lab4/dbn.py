@@ -16,7 +16,7 @@ class DeepBeliefNet:
     vis : visible
     """
     
-    def __init__(self, sizes, image_size, batch_size):
+    def __init__(self, sizes, image_size, batch_size, simplified=False):
         """
         Args:
           sizes: Dictionary of layer names and dimensions
@@ -28,14 +28,16 @@ class DeepBeliefNet:
         self.rbm_stack = {
             'vis--hid': RestrictedBoltzmannMachine(ndim_visible=sizes['vis'], ndim_hidden=sizes['hid'],
                                                    is_bottom=True, image_size=image_size, batch_size=batch_size),
-            'hid--pen': RestrictedBoltzmannMachine(ndim_visible=sizes['hid'], ndim_hidden=sizes['pen'],
-                                                   batch_size=batch_size),
             'pen+lbl--top': RestrictedBoltzmannMachine(ndim_visible=sizes['pen']+sizes['lbl'], ndim_hidden=sizes['top'],
                                                        is_top=True, n_labels=sizes['lbl'], batch_size=batch_size)
         }
+        if not simplified:
+            self.rbm_stack['hid--pen'] = RestrictedBoltzmannMachine(ndim_visible=sizes['hid'], ndim_hidden=sizes['pen'],
+                                                                    batch_size=batch_size)
         self.sizes = sizes
         self.image_size = image_size
         self.n_labels = sizes['lbl']
+        self.simplified = simplified
 
         # hyper-parameters for usage
         self.n_gibbs_recog = 20
@@ -45,6 +47,10 @@ class DeepBeliefNet:
         self.batch_size = batch_size
         self.n_gibbs_wakesleep = 5
         self.print_period = 500
+
+        # stats (for fine-tuning)
+        self.accuracy = []
+        self.measured_iterations = []
 
     def recognize(self, true_img, true_lbl):
         """Recognize/Classify the data into label categories and calculate the accuracy
@@ -65,7 +71,8 @@ class DeepBeliefNet:
 
         # single-run sampling bottom to top
         vis = self.rbm_stack['vis--hid'].get_h_given_v_dir(vis)[1]  # binary samples
-        vis = self.rbm_stack['hid--pen'].get_h_given_v_dir(vis)[1]
+        if not self.simplified:
+            vis = self.rbm_stack['hid--pen'].get_h_given_v_dir(vis)[1]
 
         # add labels units (in the last units, on the right!)
         vis = np.concatenate((vis, lbl), axis=1)
@@ -96,7 +103,8 @@ class DeepBeliefNet:
         # initialize penultimate layer with up-pass from random image
         vis = sample_binary(0.5 * np.ones((n_samples, self.sizes['vis'])))
         vis = self.rbm_stack['vis--hid'].get_h_given_v_dir(vis)[1]
-        vis = self.rbm_stack['hid--pen'].get_h_given_v_dir(vis)[1]
+        if not self.simplified:
+            vis = self.rbm_stack['hid--pen'].get_h_given_v_dir(vis)[1]
 
         # clamp labels (in the last units, on the right!)
         vis = np.concatenate((vis, lbl), axis=1)
@@ -110,7 +118,8 @@ class DeepBeliefNet:
         vis = vis[:, :-self.n_labels]
 
         # single-run sampling top to bottom
-        vis = self.rbm_stack["hid--pen"].get_v_given_h_dir(vis)[1]  # binary samples
+        if not self.simplified:
+            vis = self.rbm_stack["hid--pen"].get_v_given_h_dir(vis)[1]  # binary samples
         vis = self.rbm_stack["vis--hid"].get_v_given_h_dir(vis)[0]  # probabilities (images, avoid further noise)
 
         return vis
@@ -121,7 +130,7 @@ class DeepBeliefNet:
         entire RBM stack. If not found, learns layer-by-layer (which needs to be completed). Notice that once you
         stack more layers on top of a RBM, the weights are permanently untwined.
 
-        Args:
+        Args:4
           vis_trainset: visible data shaped (size of training set, size of visible layer)
           lbl_trainset: label data shaped (size of training set, size of label layer)
           n_iterations: number of iterations of learning (each iteration learns a mini-batch)
@@ -129,13 +138,13 @@ class DeepBeliefNet:
         try:
             self.loadfromfile_rbm(loc='trained_rbm', name='vis--hid')
             self.rbm_stack['vis--hid'].untwine_weights()
-            
-            self.loadfromfile_rbm(loc='trained_rbm', name='hid--pen')
-            self.rbm_stack['hid--pen'].untwine_weights()
+
+            if not self.simplified:
+                self.loadfromfile_rbm(loc='trained_rbm', name='hid--pen')
+                self.rbm_stack['hid--pen'].untwine_weights()
 
             self.loadfromfile_rbm(loc='trained_rbm', name='pen+lbl--top')
         except IOError:
-
             # [TODO TASK 4.2] use CD-1 to train all RBMs greedily
             f, ax = plt.subplots()
 
@@ -149,26 +158,29 @@ class DeepBeliefNet:
             self.rbm_stack['vis--hid'].untwine_weights()
             plot_reconstruction_loss(rbm=self.rbm_stack['vis--hid'], figure=f, axes=ax, label='vis--hid',
                                      filename='rec_loss_stack.jpg')
+            vis = self.rbm_stack['vis--hid'].get_h_given_v_dir(vis)[0]  # probabilities
 
             """ 
             CD-1 training for hid--pen 
             """
-            print('\ntraining hid--pen')
-            vis = self.rbm_stack['vis--hid'].get_h_given_v_dir(vis)[0]      # probabilities
-            self.rbm_stack['hid--pen'].cd1(visible_trainset=vis, n_iterations=n_iterations)
-            self.savetofile_rbm(loc='trained_rbm', name='hid--pen')
-            self.rbm_stack['hid--pen'].untwine_weights()
-            plot_reconstruction_loss(rbm=self.rbm_stack['hid--pen'], figure=f, axes=ax, label='hid--pen',
-                                     filename='rec_loss_stack.jpg')
+            if not self.simplified:
+                print('\ntraining hid--pen')
+                self.rbm_stack['hid--pen'].cd1(visible_trainset=vis, n_iterations=n_iterations)
+                self.savetofile_rbm(loc='trained_rbm', name='hid--pen')
+                self.rbm_stack['hid--pen'].untwine_weights()
+                plot_reconstruction_loss(rbm=self.rbm_stack['hid--pen'], figure=f, axes=ax, label='hid--pen',
+                                         filename='rec_loss_stack.jpg')
+                vis = self.rbm_stack['hid--pen'].get_h_given_v_dir(vis)[0]  # probabilities
 
             """ 
             CD-1 training for pen+lbl--top 
             """
             print('\ntraining pen+lbl--top')
-            vis = self.rbm_stack['hid--pen'].get_h_given_v_dir(vis)[0]      # probabilities
             vis = np.concatenate((vis, lbl_trainset), axis=1)               # add labels (on the right!)
             self.rbm_stack['pen+lbl--top'].cd1(visible_trainset=vis, n_iterations=n_iterations)
             self.savetofile_rbm(loc='trained_rbm', name='pen+lbl--top')
+            plot_reconstruction_loss(rbm=self.rbm_stack['pen+lbl--top'], figure=f, axes=ax, label='pen+lbl--top',
+                                     filename='rec_loss_stack.jpg')
 
     def train_wakesleep_finetune(self, vis_trainset, lbl_trainset, n_iterations):
         """
@@ -186,11 +198,26 @@ class DeepBeliefNet:
 
         try:
             self.loadfromfile_dbn(loc='trained_dbn', name='vis--hid')
-            self.loadfromfile_dbn(loc='trained_dbn', name='hid--pen')
+            if not self.simplified:
+                self.loadfromfile_dbn(loc='trained_dbn', name='hid--pen')
             self.loadfromfile_rbm(loc='trained_dbn', name='pen+lbl--top')
         except IOError:
             n_samples = vis_trainset.shape[0]
             n_batches = int(n_samples / self.batch_size)
+
+            # remove momentum
+            self.rbm_stack['vis--hid'].momentum = 0
+            if not self.simplified:
+                self.rbm_stack['hid--pen'].momentum = 0
+            self.rbm_stack['pen+lbl--top'].momentum = 0
+
+            # shuffle
+            vis_trainset = vis_trainset.copy()
+            lbl_trainset = lbl_trainset.copy()
+            idx = list(range(n_samples))
+            np.random.shuffle(idx)
+            vis_trainset = vis_trainset[idx]
+            lbl_trainset = lbl_trainset[idx]
 
             for it in range(n_iterations):
                 # select batch
@@ -201,7 +228,10 @@ class DeepBeliefNet:
                 # [TODO TASK 4.3] wake-phase: drive the network bottom to top fixing the visible and label data.
                 # drive bottom to top (recognition weights)
                 wake_hid_p, wake_hid = self.rbm_stack['vis--hid'].get_h_given_v_dir(batch_vis)
-                wake_pen_p, wake_pen = self.rbm_stack['hid--pen'].get_h_given_v_dir(wake_hid)
+                if not self.simplified:
+                    wake_pen_p, wake_pen = self.rbm_stack['hid--pen'].get_h_given_v_dir(wake_hid)
+                else:
+                    wake_pen = wake_hid
 
                 # positive phase CDk on top RBM
                 pos_pen = np.concatenate((wake_pen, batch_lbl), axis=1)
@@ -221,34 +251,48 @@ class DeepBeliefNet:
 
                 # [TODO TASK 4.3] sleep phase: from the activities in the top RBM, drive the network top to bottom.
                 sleep_pen = neg_pen[:, :-self.n_labels]     # throw away label units
-                sleep_hid_p, sleep_hid = self.rbm_stack['hid--pen'].get_v_given_h_dir(sleep_pen)
+                if not self.simplified:
+                    sleep_hid_p, sleep_hid = self.rbm_stack['hid--pen'].get_v_given_h_dir(sleep_pen)
+                else:
+                    sleep_hid = sleep_pen
                 sleep_vis_p, sleep_vis = self.rbm_stack['vis--hid'].get_v_given_h_dir(sleep_hid)
 
                 # [TODO TASK 4.3] compute predictions: compute generative predictions from wake-phase activations, and recognize predictions from sleep-phase activations.
                 # predictions during wake phase (for generative weights)
                 pred_wake_vis = self.rbm_stack['vis--hid'].get_v_given_h_dir(wake_hid)[0]
-                pred_wake_hid = self.rbm_stack['hid--pen'].get_v_given_h_dir(wake_pen)[0]
+                if not self.simplified:
+                    pred_wake_hid = self.rbm_stack['hid--pen'].get_v_given_h_dir(wake_pen)[0]
 
                 # predictions during sleep phase (for recognition weights)
-                pred_sleep_pen = self.rbm_stack['hid--pen'].get_h_given_v_dir(sleep_hid)[0]
+                if not self.simplified:
+                    pred_sleep_pen = self.rbm_stack['hid--pen'].get_h_given_v_dir(sleep_hid)[0]
                 pred_sleep_hid = self.rbm_stack['vis--hid'].get_h_given_v_dir(sleep_vis_p)[0]
 
                 # [TODO TASK 4.3] update generative parameters: here you will only use 'update_generate_params' method from rbm class.
                 self.rbm_stack['vis--hid'].update_generate_params(inps=wake_hid, trgs=batch_vis, preds=pred_wake_vis)
-                self.rbm_stack['hid--pen'].update_generate_params(inps=wake_pen, trgs=wake_hid, preds=pred_wake_hid)
+                if not self.simplified:
+                    self.rbm_stack['hid--pen'].update_generate_params(inps=wake_pen, trgs=wake_hid, preds=pred_wake_hid)
 
                 # [TODO TASK 4.3] update parameters of top rbm: here you will only use 'update_params' method from rbm class.
                 self.rbm_stack['pen+lbl--top'].update_params(v_0=pos_pen, h_0=pos_top, v_k=neg_pen, h_k=neg_top)
 
                 # [TODO TASK 4.3] update generative parameters: here you will only use 'update_recognize_params' method from rbm class.
-                self.rbm_stack['hid--pen'].update_recognize_params(inps=sleep_hid, trgs=sleep_pen, preds=pred_sleep_pen)
+                if not self.simplified:
+                    self.rbm_stack['hid--pen'].update_recognize_params(inps=sleep_hid, trgs=sleep_pen, preds=pred_sleep_pen)
                 self.rbm_stack['vis--hid'].update_recognize_params(inps=sleep_vis_p, trgs=sleep_hid, preds=pred_sleep_hid)
 
                 if it % self.print_period == 0:
-                    print('iteration=%07d' % it)
+                    # comment here to speedup the training at the cost of not having the learning curve
+                    self.accuracy.append(self.recognize(vis_trainset, lbl_trainset))
+                    self.measured_iterations.append(it)
+                    print('iteration=%07d accuracy=%.2f%%' % (it, 100. * self.accuracy[-1]))
+
+                    # uncomment here if you comment above
+                    # print('iteration=%07d' % it)
 
             self.savetofile_dbn(loc="trained_dbn", name="vis--hid")
-            self.savetofile_dbn(loc="trained_dbn", name="hid--pen")
+            if not self.simplified:
+                self.savetofile_dbn(loc="trained_dbn", name="hid--pen")
             self.savetofile_rbm(loc="trained_dbn", name="pen+lbl--top")
 
     def loadfromfile_rbm(self, loc, name):

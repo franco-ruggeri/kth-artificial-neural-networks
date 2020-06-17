@@ -76,6 +76,10 @@ class RestrictedBoltzmannMachine:
         n_samples = visible_trainset.shape[0]
         n_batches = int(n_samples / self.batch_size)
 
+        # shuffle
+        visible_trainset = visible_trainset.copy()
+        np.random.shuffle(visible_trainset)
+
         for it in range(n_iterations):
             # [TODO TASK 4.1] run k=1 alternating Gibbs sampling : v_0 -> h_0 ->  v_1 -> h_1.
             # select batch
@@ -116,10 +120,12 @@ class RestrictedBoltzmannMachine:
            h_k: activities or probabilities of hidden layer
            all args have shape (size of mini-batch, size of respective layer)
         """
+        n_samples = v_0.shape[0]
+
         # [TODO TASK 4.1] get the gradients from the arguments (replace the 0s below) and update the weight and bias parameters
-        self.delta_weight_vh = self.learning_rate * (v_0.T @ h_0 - v_k.T @ h_k)
-        self.delta_bias_v = self.learning_rate * (v_0.sum(axis=0) - v_k.sum(axis=0))
-        self.delta_bias_h = self.learning_rate * (h_0.sum(axis=0) - h_k.sum(axis=0))
+        self.delta_weight_vh = self.learning_rate / n_samples * (v_0.T @ h_0 - v_k.T @ h_k) + self.momentum * self.delta_weight_vh
+        self.delta_bias_v = self.learning_rate / n_samples * (v_0.sum(axis=0) - v_k.sum(axis=0)) + self.momentum * self.delta_bias_v
+        self.delta_bias_h = self.learning_rate / n_samples * (h_0.sum(axis=0) - h_k.sum(axis=0)) + self.momentum * self.delta_bias_h
 
         self.bias_v += self.delta_bias_v
         self.weight_vh += self.delta_weight_vh
@@ -249,9 +255,11 @@ class RestrictedBoltzmannMachine:
            preds: activities or probabilities of output unit (prediction)
            all args have shape (size of mini-batch, size of respective layer)
         """
+        n_samples = inps.shape[0]
+
         # [TODO TASK 4.3] find the gradients from the arguments (replace the 0s below) and update the weight and bias parameters.
-        self.delta_weight_h_to_v = self.learning_rate * inps.T @ (trgs - preds)
-        self.delta_bias_v = self.learning_rate * (trgs - preds).sum(axis=0)
+        self.delta_weight_h_to_v = self.learning_rate / n_samples * inps.T @ (trgs - preds) + self.momentum * self.delta_weight_h_to_v
+        self.delta_bias_v = self.learning_rate / n_samples * (trgs - preds).sum(axis=0) + self.momentum * self.delta_bias_v
 
         self.weight_h_to_v += self.delta_weight_h_to_v
         self.bias_v += self.delta_bias_v
@@ -265,9 +273,11 @@ class RestrictedBoltzmannMachine:
            preds: activities or probabilities of output unit (prediction)
            all args have shape (size of mini-batch, size of respective layer)
         """
+        n_samples = inps.shape[0]
+
         # [TODO TASK 4.3] find the gradients from the arguments (replace the 0s below) and update the weight and bias parameters.
-        self.delta_weight_v_to_h = self.learning_rate * inps.T @ (trgs - preds)
-        self.delta_bias_h += self.learning_rate * (trgs - preds).sum(axis=0)
+        self.delta_weight_v_to_h = self.learning_rate / n_samples * inps.T @ (trgs - preds) + self.momentum * self.delta_weight_v_to_h
+        self.delta_bias_h += self.learning_rate / n_samples * (trgs - preds).sum(axis=0) + self.momentum * self.delta_bias_h
 
         self.weight_v_to_h += self.delta_weight_v_to_h
         self.bias_h += self.delta_bias_h
