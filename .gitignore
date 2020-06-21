@@ -1,8 +1,9 @@
-# byte-compiled
+lab*/__pycache__/
+lab*/figures/
+lab4/trained_rbm/
+lab4/trained_dbn/
+
+
 Lab\ 1/lab1/__pycache__/
 Lab\ 2/lab2/__pycache__/
 Lab\ 3/lab3/__pycache__/
-
-Lab\ 1/lab1/.idea/
-Lab\ 2/lab2/.idea/
-Lab\ 3/lab3/.idea/
