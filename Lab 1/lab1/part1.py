@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from perceptron import SLP, MLP
+from mpl_toolkits import mplot3d
 
 
 def generate_data(mu, sigma, N, seed, linearly_sep):
@@ -132,8 +133,15 @@ def plot_decision_boundary(perceptron, axes, xlim, label, N=100):
     axes.plot(x1, x2, label=label, linewidth=2)
 
 
-def plot_learning_curve(perceptron, axes, style, label):
-    axes.plot(perceptron.mce, style, label=label)
+def plot_learning_curve(perceptron, axes, style, label, plot_val=False):
+
+    if plot_val:
+        axes.plot(perceptron.val_mce, style, label=label)
+
+    else:
+        axes.plot(perceptron.mce, style, label=label)
+    # print(perceptron.val_mce)
+    # print(perceptron.mce)
 
 
 def perceptron_vs_delta(patterns, targets, axes_db, axes_lc, xlim, seed, learning_rates, epochs):
@@ -239,43 +247,138 @@ def linearly_non_separable_sl(patterns, targets, axes_db, xlim, seed, learning_r
         print()
 
 
-def linearly_non_separable_ml(patterns, targets, axes_db, axes_lc, xlim, seed, learning_rate, epochs, hidden_nodes):
+def linearly_non_separable_ml(patterns, targets,
+                              axes_db, axes_lc, xlim, seed, learning_rate, epochs, hidden_nodes):
     np.random.seed(seed)
 
     # train
     targets = np.where(targets == 1, 1, -1)     # targets {-1,1} for delta rule
     perceptron = MLP(learning_rate, epochs, hidden_nodes)
-    perceptron.learn(patterns, targets)
+    train_patterns, train_targets, val_patterns, val_targets = sub_sample_data(patterns, targets, seed)
+    # print(train_targets)
+    # print(val_targets)
 
-    # learning curve
-    plot_learning_curve(perceptron, axes_lc, '-', None)
+    colors = ['magenta', 'green', 'black', 'yellow'] #, 'purple']
+    labels = ['scenario 1', 'scenario 2', 'scenario 3', 'scenario 4']
+    n_hidden_nodes = [1, 2, 3, 4, 5]
 
-    # decision boundary
-    N = 1000
-    x1 = np.linspace(xlim[0], xlim[1], N)
-    x2 = np.linspace(xlim[2], xlim[3], N)
-    xx1, xx2 = np.meshgrid(x1, x2)
-    xx = np.concatenate((np.ravel(xx1).reshape(1, -1), np.ravel(xx2).reshape(1, -1)), axis=0)
-    y = perceptron.predict(xx).reshape(N, N)
-    axes_db.contour(xx1, xx2, y, levels=(0,))
+    # for i in range(len(n_hidden_nodes)):
+    #     perceptron = MLP(learning_rate, epochs, n_hidden_nodes[i])
+    #     perceptron.learn(patterns, targets, None, None)
+    #     plot_learning_curve(perceptron, axes_lc, '-', label="LC for " + str(n_hidden_nodes[i]) + " hidden nodes")
+    #     N = 1000
+    #     x1 = np.linspace(xlim[0], xlim[1], N)
+    #     x2 = np.linspace(xlim[2], xlim[3], N)
+    #     xx1, xx2 = np.meshgrid(x1, x2)
+    #     xx = np.concatenate((np.ravel(xx1).reshape(1, -1), np.ravel(xx2).reshape(1, -1)), axis=0)
+    #     y = perceptron.predict(xx, classification=True).reshape(N, N)
+    #     axes_db.contour(xx1, xx2, y, levels=(0,), colors=colors[i])
+    #     proxy = plt.Rectangle((0, 0), 1, 1, fc=colors[i], label='Number of hidden nodes: ' + str(n_hidden_nodes[i]))
+    #     axes_db.patches += [proxy]
+
+    for i in range(len(train_patterns)):
+
+        # print(train_patterns[i].shape)
+        # print(train_targets[i].shape)
+        # print(val_patterns[i].shape)
+        # print(val_targets[i].shape)
+        # print(train_patterns[i])
+        perceptron.learn(train_patterns[i], train_targets[i], val_patterns[i], val_targets[i])
+
+        # learning curve
+        plot_learning_curve(perceptron, axes_lc, '-', label='train ' + labels[i], plot_val=False)
+        plot_learning_curve(perceptron, axes_lc, '-', label='val' + labels[i], plot_val=True)
+
+        # decision boundary
+        N = 1000
+        x1 = np.linspace(xlim[0], xlim[1], N)
+        x2 = np.linspace(xlim[2], xlim[3], N)
+        xx1, xx2 = np.meshgrid(x1, x2)
+        xx = np.concatenate((np.ravel(xx1).reshape(1, -1), np.ravel(xx2).reshape(1, -1)), axis=0)
+        y = perceptron.predict(xx, classification=True).reshape(N, N)
+        axes_db.contour(xx1, xx2, y, levels=(0,), colors=colors[i])
+        proxy = plt.Rectangle((0, 0), 1, 1, fc=colors[i], label=labels[i])
+        axes_db.patches += [proxy]
 
 
-seed = 100
+def auto_encoder(learning_rate):
+
+    data = -1*np.ones((8,8))
+    np.fill_diagonal(data,1)
+    perceptron = MLP(learning_rate, 100, hidden_nodes=2)
+    epochs, array = perceptron.learn(data, data, None, None)
+    print(epochs)
+    print(array)
+
+def gaussian(x, y):
+    return np.exp(-(x**2 + y**2)/10) - 0.5
+
+
+def function_approximation(learning_rate, epochs, hidden_nodes, nsamp, plot_decision_surface=False):
+
+    x = np.arange(-5, 5, 0.5)
+    y = np.arange(-5, 5, 0.5)
+    ndata = len(x)*len(y)
+    xx, yy = np.meshgrid(x, y)
+
+    z = gaussian(xx, yy)
+    ax = plt.axes(projection='3d')
+
+    targets = np.reshape(z, (1, ndata))
+    patterns = np.concatenate((np.reshape(xx, (1, ndata)), np.reshape(yy, (1, ndata))))
+
+    # sub sample
+    shuffled_patterns, shuffled_targets = shuffle_data(patterns, targets, 10)
+    training_patterns, training_targets = shuffled_patterns[:, 0:nsamp], shuffled_targets[:, 0:nsamp]
+    validation_patterns, validation_targets = shuffled_patterns[:, nsamp:], shuffled_targets[:, nsamp:]
+
+    perceptron = MLP(learning_rate, epochs, hidden_nodes)
+    perceptron.learn(training_patterns, training_targets, validation_patterns, validation_targets)
+
+    zz = perceptron.predict(patterns, classification=False).reshape(20, 20)
+    zz_train = perceptron.predict(training_patterns, classification=False)
+
+    # train_mse = np.sum(np.square(zz_train - training_targets))/np.shape(training_targets)[1]
+    # val_mse = np.sum(np.square(zz - targets))/np.shape(targets)[1]
+
+    #plot_mse(perceptron)
+    if plot_decision_surface:
+        #ax.contour3D(xx, yy, z, 50, cmap='viridis')
+
+        ax.contour3D(xx, yy, zz, 50, cmap='viridis')
+        plt.show()
+
+    #return train_mse, val_mse
+
+def plot_mse(perceptron):
+
+    """Plots how the MSE varies over epochs, probably not a necessary metric for this report though"""
+    mse = perceptron.mse_over_time
+    val_mse = perceptron.val_mse_over_time
+    plt.figure()
+    plt.title('Number of hidden nodes:' + str(perceptron.hidden_nodes))
+    plt.plot(np.arange(len(mse)), mse, label='training MSE')
+    plt.plot(np.arange(len(val_mse)), val_mse, label='validation MSE')
+    plt.legend()
+    plt.show()
+
+seed = 5
 
 # prepare figures
-fig_db = plt.figure()
-axes_db = plt.axes()
-fig_lc = plt.figure()
-axes_lc = plt.axes()
+# fig_db = plt.figure()
+# axes_db = plt.axes()
+# fig_lc = plt.figure()
+# axes_lc = plt.axes()
 
 # generate data
-mu = [(1., .3), (0, -.1)]
+mu = [(1.0, .3), (0, -.1)]
 sigma = [.2, .3]
 N = 100
 patterns, targets = generate_data(mu, sigma, N, seed, linearly_sep=False)
 patterns, targets = shuffle_data(patterns, targets, seed)
+#train_patterns, train_targets, val_patterns, val_targets = sub_sample_data(patterns, targets, seed)
 xlim = [min(patterns[0])-0.1, max(patterns[0])+0.1, min(patterns[1])-0.1, max(patterns[1])+0.1]
-plot_data(axes_db, patterns, targets)
+#plot_data(axes_db, patterns, targets)
 
 # analysis
 # perceptron_vs_delta(patterns, targets, axes_db, axes_lc, xlim, seed, learning_rates=[0.01, 0.001, 0.0001], epochs=30)
@@ -285,16 +388,48 @@ plot_data(axes_db, patterns, targets)
 #                     learning_rates=[0.1], epochs=20, n_orders=2, method='perceptron')
 # no_bias(patterns, targets, axes_db, axes_lc, xlim, seed, learning_rate=0.001, epochs=20)
 # linearly_non_separable_sl(patterns, targets, axes_db, xlim, seed, learning_rate=0.001, epochs=100, n_runs=10)
-linearly_non_separable_ml(patterns, targets, axes_db, axes_lc, xlim, seed,
-                          learning_rate=0.1, epochs=200, hidden_nodes=3)
+#linearly_non_separable_ml(patterns, targets, axes_db, axes_lc, xlim, seed,
+#                          learning_rate=0.1, epochs=200, hidden_nodes=5)
+
+#auto_encoder(learning_rate=0.01)
+
+# PART 3.2.3.1
+# for i in range(1, 26):
+#     print("Number of hidden nodes:", i)
+#     mse.append(function_approximation(learning_rate=0.1, epochs=100, hidden_nodes=i, nsamp=100, plot_decision_surface=False))
+# print(mse, len(mse))
+
+function_approximation(learning_rate=0.5, epochs=100, hidden_nodes=25, nsamp=380, plot_decision_surface=True)
+
+# PART 3.2.3.2
+# mse = []
+# val_mse = []
+# nsamp_percentages = np.linspace(0.20, 0.80, 7)
+# nsamp_distribution = 400*nsamp_percentages
+# nsamp_distribution = nsamp_distribution.astype(int)
+# for nsamp in nsamp_distribution:
+#     train_mse, validation_mse = function_approximation(learning_rate=0.1, epochs=100, hidden_nodes=25, nsamp=nsamp)
+#     mse.append(train_mse)
+#     val_mse.append(validation_mse)
+#
+#
+# plt.plot(nsamp_percentages, mse, label='training MSE')
+# plt.plot(nsamp_percentages, val_mse, label='validation MSE')
+# plt.xlabel('number of samples, 'r'[%]')
+# plt.ylabel('Mean Squared Error')
+# plt.legend()
+# plt.show()
+
 
 # show figures
-axes_db.legend(loc='lower right')
-axes_lc.legend(loc='upper right')
-axes_db.set_xlabel(r'$x_1$')
-axes_db.set_ylabel(r'$x_2$')
-axes_lc.set_xlabel('epoch')
-axes_lc.set_ylabel('misclassification error')
-axes_db.axis(xlim)
-fig_db.show()
-fig_lc.show()
+# axes_db.legend(loc='lower right')
+# axes_lc.legend(loc='upper right')
+# axes_db.set_xlabel(r'$x_1$')
+# axes_db.set_ylabel(r'$x_2$')
+# axes_lc.set_xlabel('epoch')
+# axes_lc.set_ylabel('misclassification error')
+# axes_db.axis(xlim)
+#fig_db.show()
+#fig_lc.show()
+
+# plt.show()
